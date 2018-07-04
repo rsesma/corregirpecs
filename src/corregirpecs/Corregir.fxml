@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane prefHeight="200.0" prefWidth="500.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="corregirpecs.CorregirController">
+   <children>
+      <Label layoutX="16.0" layoutY="15.0" text="Arxiu zip amb les PECs">
+         <font>
+            <Font name="System Bold" size="14.0" />
+         </font>
+      </Label>
+      <TextField fx:id="zip" layoutX="16.0" layoutY="38.0" prefHeight="27.0" prefWidth="432.0" />
+      <Button layoutX="456.0" layoutY="38.0" mnemonicParsing="false" onAction="#getZip" prefHeight="27.0" prefWidth="11.0" text="..." />
+      <CheckBox fx:id="presencials" layoutX="16.0" layoutY="74.0" mnemonicParsing="false" text="Presencials">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </CheckBox>
+   </children>
+</AnchorPane>
