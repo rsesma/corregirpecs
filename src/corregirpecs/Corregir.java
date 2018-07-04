@@ -16,7 +16,7 @@ public class Corregir extends Application {
         
         stage.setTitle("Corregir PECs");
         stage.setScene(scene);
-        stage.show();		
+        stage.show();
 	}
 
 	public static void main(String[] args) {

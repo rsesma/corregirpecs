@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.*?>
-<?import javafx.scene.text.*?>
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
 
-
-<AnchorPane prefHeight="200.0" prefWidth="500.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="corregirpecs.CorregirController">
+<AnchorPane prefHeight="200.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.CorregirController">
    <children>
-      <Label layoutX="16.0" layoutY="15.0" text="Arxiu zip amb les PECs">
+      <Label layoutX="16.0" layoutY="15.0" text="PECs (arxiu ZIP)">
          <font>
-            <Font name="System Bold" size="14.0" />
+            <Font size="14.0" />
          </font>
       </Label>
       <TextField fx:id="zip" layoutX="16.0" layoutY="38.0" prefHeight="27.0" prefWidth="432.0" />
@@ -21,5 +21,6 @@
             <Font size="14.0" />
          </font>
       </CheckBox>
+      <Button layoutX="410.0" layoutY="160.0" mnemonicParsing="false" onAction="#Analisi" text="Analitzar" />
    </children>
 </AnchorPane>
