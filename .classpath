@@ -2,6 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/home/drslump/jar/commons-io-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/r/jar/commons-io-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/r/jar/bcpkix-jdk15on-1.49.jar"/>
+	<classpathentry kind="lib" path="/Users/r/jar/bcprov-jdk15on-1.49.jar"/>
+	<classpathentry kind="lib" path="/Users/r/jar/itextpdf-5.5.10.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
