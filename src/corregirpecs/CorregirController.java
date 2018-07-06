@@ -41,8 +41,8 @@ public class CorregirController implements Initializable {
     private CheckBox overwrite;
 
     //private final String C_DEFDIR = System.getProperty("user.home");
-    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     @FXML
     void getDir(ActionEvent event) {
@@ -148,32 +148,100 @@ public class CorregirController implements Initializable {
             	ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
             } else {
             	// SOLUCIÓ: arxiu sol.txt 
+            	ArrayList<Pregunta> Plantilla = GetPlantilla(files.iterator().next());
+            	
+                // DADES: si no s'han extret del PDF, extreure-les
+                files = FileUtils.listFiles(folder, new WildcardFileFilter("dades_pecs.txt"), null);
+                if (files.isEmpty()) GetDadesPECs(folder, pecs, Plantilla);
+
+                // PECS: respostes de les PECs dels alumnes
+                ArrayList<PEC> PECs = new ArrayList<PEC>();
             	try {
-            		// obtenir les files de la solució una a una
-            		LineIterator it = FileUtils.lineIterator(files.iterator().next(), "UTF-8");
+            		// obtenir les dades de cada pec, fila a fila
+            		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + "dades_pecs.txt"), "UTF-8");
                 	try {
-                		Boolean lfirst = true;
                 	    while (it.hasNext()) {
                 	    	String line = it.nextLine();
-                	    	if (!lfirst) {
-	                	    	String[] t = line.split(",");
-	                	        for (String c : t) {
-	                	            System.out.println(c);
-	                	        }
-                	    	} else {
-                	    		lfirst = false;
-                	    	}
+                	    	PECs.add(new PEC(Plantilla, line));
                 	    }
                 	} catch (Exception e) {
                     	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
                     } finally {
                 	    it.close();
                 	}
+            	} catch (Exception e) {
+                	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+                }
+
+            	for (PEC p : PECs) {
+            		System.out.println(p.dni);
+            	}
+            }
+            
+    		ShowAlert("Proceso acabado","Fin",AlertType.INFORMATION);            
+    	}
+    }
+    
+    public ArrayList<Pregunta> GetPlantilla(File f) {
+    	ArrayList<Pregunta> Plantilla = new ArrayList<Pregunta>();
+    	try {
+    		// obtenir les files de la solució una a una
+    		LineIterator it = FileUtils.lineIterator(f, "UTF-8");
+        	try {
+        		Boolean lfirst = true;
+        	    while (it.hasNext()) {
+        	    	String line = it.nextLine();
+        	    	if (!lfirst) Plantilla.add(new Pregunta(line));
+        	    	else lfirst = false;
+        	    }
+        	} catch (Exception e) {
+            	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+            } finally {
+        	    it.close();
+        	}
+        } catch (Exception e) {
+        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+        }
+    	return Plantilla;
+    }
+    
+    public void GetDadesPECs(File folder, File pecs, ArrayList<Pregunta> Plantilla) {
+    	// loop per les PECs (arxius PDF) de la carpeta PDFs
+    	Collection<File> pdfs = FileUtils.listFiles(pecs, new WildcardFileFilter("*.pdf"), null);
+        List<String> lines = new ArrayList<>();
+        for (File f : pdfs) {
+            if (f.isFile()) {
+                String n = f.getName();
+                String dni = n.substring(n.lastIndexOf("_")+1,n.lastIndexOf("."));
+                
+                // obrir la PEC
+                try {
+                    PdfReader reader = new PdfReader(f.getAbsolutePath());
+                    AcroFields form = reader.getAcroFields();
+                    if (form.getFields().size()>0) {
+                        // capçalera amb les dades identificatives
+                        String c = "'" + form.getField("APE1") + "','" + form.getField("APE2") + "','" + 
+                                form.getField("NOMBRE") + "','" + dni + "'";
+                        if (!presencials.isSelected()) c = c + ((form.getField("HONOR").equalsIgnoreCase("Yes")) ? ",1" : ",0");
+
+                        // loop obtenint les dades dels camps
+                        for (Pregunta p : Plantilla) {
+                            c = c + ",'" + form.getField(p.nom).replace(".", ",") + "'";
+                        }
+                        lines.add(c);
+                    }	                        
                 } catch (Exception e) {
                 	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
                 }
             }
-    	}
+        }
+        
+        // escriure l'arxiu dades_pecs.txt
+        try {
+        	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + "dades_pecs.txt"), lines, Charset.forName("UTF-8"));
+        } catch (Exception e) {
+        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+        }
     }
     
     public void ShowAlert(String message, String title, AlertType type) {
