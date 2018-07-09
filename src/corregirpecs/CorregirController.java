@@ -41,8 +41,8 @@ public class CorregirController implements Initializable {
     private CheckBox overwrite;
 
     //private final String C_DEFDIR = System.getProperty("user.home");
-    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     @FXML
     void getDir(ActionEvent event) {
@@ -53,14 +53,22 @@ public class CorregirController implements Initializable {
         if (folder != null) dir.setText(folder.getAbsolutePath());
         else dir.setText("");
     }
+    
+    public Boolean CheckDir() {
+    	Boolean lreturn = false;
+    	if (dir.getText().isEmpty()) {
+    		ShowAlert("Indicar la carpeta de treball","Error",AlertType.ERROR);
+    	} else {
+    		File folder = new File(dir.getText());
+    		lreturn = folder.exists(); 
+    		if (!lreturn) ShowAlert("La carpeta de treball no existeix","Error",AlertType.ERROR);
+    	}
+    	return lreturn;
+    }
 
     @FXML
-    void Descomprimir(ActionEvent event) {
-    	Boolean lContinue = false;
-    	if (dir.getText().isEmpty()) ShowAlert("Indicar la carpeta de treball","Error",AlertType.ERROR);
-    	else lContinue = true;
-    	
-    	if (lContinue) {
+    void Descomprimir(ActionEvent event) {    	
+    	if (this.CheckDir()) {
     		// obtenir l'arxiu zip
             File directory = new File(dir.getText());
             Collection<File> files = FileUtils.listFiles(directory, new WildcardFileFilter("*.zip"), null);
@@ -137,9 +145,7 @@ public class CorregirController implements Initializable {
     
     @FXML
     void Analitzar(ActionEvent event) {
-    	if (dir.getText().isEmpty()) {
-    		ShowAlert("Indicar la carpeta de treball","Error",AlertType.ERROR);
-    	} else {
+    	if (this.CheckDir()) {
             File folder = new File(dir.getText());
     		File pecs = new File(dir.getText(),"PDFs");
             Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter("sol.txt"), null);
@@ -164,7 +170,7 @@ public class CorregirController implements Initializable {
                 	try {
                 	    while (it.hasNext()) {
                 	    	String line = it.nextLine();
-                	    	PECs.add(new PEC(Plantilla, line, presencial.isSelected()));
+                	    	PECs.add(new PEC(Plantilla, line));
                 	    }
                 	} catch (Exception e) {
                     	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
@@ -175,13 +181,29 @@ public class CorregirController implements Initializable {
                 	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
                 }
 
+            	// obtenir l'estadística de les respostes per cada pregunta
+            	Stat st = new Stat(Plantilla);
             	for (PEC p : PECs) {
-            		System.out.print(p.dni + "; ");
-            		System.out.print(p.honor + "; ");
             		for (Resposta r: p.resp) {
-            			System.out.print(r.nom + ": " + r.resp + ";");
+            			st.getItem(r.nom).Add(r.resp);
             		}
-            		System.out.println(" ");
+            	}
+            	
+            	// obtenir totes les possibles solucions ordenades de major a menor percentatge
+            	Integer count = 1;
+            	ArrayList<Solucio> solucions = new ArrayList<Solucio>();
+            	for (Item i: st.items) {
+            		solucions.add(new Solucio(count,i,PECs.size()));
+            		count = count + 1;
+            	}
+            	
+            	for (Solucio s: solucions) {
+            		System.out.print(s.num);
+            		System.out.println("- " + s.pregunta);
+            		for (Opcio o: s.opcions) {
+            			System.out.print(o.value + " / ");
+            			System.out.println(o.pct);
+            		}
             	}
             }
             
@@ -229,13 +251,17 @@ public class CorregirController implements Initializable {
                     AcroFields form = reader.getAcroFields();
                     if (form.getFields().size()>0) {
                         // capçalera amb les dades identificatives
-                        String c = "'" + form.getField("APE1") + "','" + form.getField("APE2") + "','" + 
-                                form.getField("NOMBRE") + "','" + dni + "'";
-                        if (!presencial.isSelected()) c = c + (form.getField("HONOR").equalsIgnoreCase("Yes") ? ",1" : ",0");
+                        String c = dni;
+                        try {
+                        	String h = form.getField("HONOR");
+                        	c = c + (h.equalsIgnoreCase("Yes") ? ",1" : ",0");
+                        } catch (Exception e) {
+                        	// no fer res: el camp honor no existeix perquè la PEC és presencial
+                        }
 
                         // loop obtenint les dades dels camps
                         for (Pregunta p : Plantilla) {
-                            c = c + ",'" + form.getField(p.nom).replace(".", ",") + "'";
+                            c = c + ";" + form.getField(p.nom).replace(",", ".");
                         }
                         lines.add(c);
                     }	                        

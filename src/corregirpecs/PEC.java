@@ -7,26 +7,19 @@ public class PEC {
     public Boolean honor;
     public ArrayList<Resposta> resp = new ArrayList<Resposta>();
     
-    public PEC(ArrayList<Pregunta> plantilla, String c, Boolean presencial) {
-    	String[] d = c.split(",");
-    	
-    	// dni de l'alumne: posició 3 (0-based)
-    	this.dni = d[3].replace("'", "");
-    	
-    	// honor: si no és presencial, posició 4
-    	Integer iConta = 5;
-    	if (!presencial) {
-    		this.honor = (d[4].equals("1"));
-    	} else {
-    		iConta = 4;
-    		this.honor = null;
-    	}
+    public PEC(ArrayList<Pregunta> plantilla, String c) {
+    	String[] d = c.split(";",-1);
+
+    	// dni de l'alumne i honor: primer token
+    	String[] t = d[0].split(",");
+    	this.dni = t[0];
+    	if (t.length>1) this.honor = (t[1].equals("1"));
 
     	// loop per les respostes
+    	Integer iConta = 1;
     	for (Pregunta p : plantilla) {
     		this.resp.add(new Resposta(p.nom,d[iConta]));
     		iConta = iConta + 1;
     	}
-
     }
 }
