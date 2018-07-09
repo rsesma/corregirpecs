@@ -2,9 +2,9 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="/home/drslump/git/corregirpecs/src/ext_jar/bcpkix-jdk15on-1.49.jar"/>
-	<classpathentry kind="lib" path="/home/drslump/git/corregirpecs/src/ext_jar/bcprov-jdk15on-1.49.jar"/>
-	<classpathentry kind="lib" path="/home/drslump/git/corregirpecs/src/ext_jar/commons-io-2.6.jar"/>
-	<classpathentry kind="lib" path="/home/drslump/git/corregirpecs/src/ext_jar/itextpdf-5.5.10.jar"/>
+	<classpathentry kind="lib" path="/Users/r/git/corregirpecs/src/ext_jar/bcpkix-jdk15on-1.49.jar"/>
+	<classpathentry kind="lib" path="/Users/r/git/corregirpecs/src/ext_jar/bcprov-jdk15on-1.49.jar"/>
+	<classpathentry kind="lib" path="/Users/r/git/corregirpecs/src/ext_jar/commons-io-2.6.jar"/>
+	<classpathentry kind="lib" path="/Users/r/git/corregirpecs/src/ext_jar/itextpdf-5.5.10.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

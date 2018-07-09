@@ -36,13 +36,13 @@ public class CorregirController implements Initializable {
     @FXML
     private TextField dir;
     @FXML
-    private CheckBox presencials;
+    private CheckBox presencial;
     @FXML
     private CheckBox overwrite;
 
     //private final String C_DEFDIR = System.getProperty("user.home");
-    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     @FXML
     void getDir(ActionEvent event) {
@@ -102,9 +102,11 @@ public class CorregirController implements Initializable {
                     zis.closeEntry();
                     zis.close();
                     
-	        		// comprovar els arxius descomprimits i generar problemes si necessari 
-	        		List<String> problems = new ArrayList<String>();
-	        		for (File f : folder.listFiles()) {
+	        		// comprovar els arxius descomprimits i generar problemes si necessari
+                    Boolean lproblems = false;
+                    File problems = new File(dir.getText(),"problemes");		// carpeta a on es copien les PECs problemàtiques
+                	if (problems.exists()) FileUtils.deleteDirectory(problems); 
+                    for (File f : folder.listFiles()) {
 	        			// loop pels arxius no ocults
 	        	        if (f.isFile() && !f.isHidden()) {
 	        	        	// és un PDF?
@@ -113,19 +115,19 @@ public class CorregirController implements Initializable {
 	        	                PdfReader reader = new PdfReader(f.getAbsolutePath());
 	        	                AcroFields form = reader.getAcroFields();
 	        	                // té camps?
-	        	                if (!(form.getFields().size()>0)) problems.add(f.getName()); 
+	        	                if (!(form.getFields().size()>0)) {
+	        	                	FileUtils.moveFileToDirectory(f, problems, true);
+	        	                	lproblems = true;
+	        	                }
 	        	        	} else {
-	        	        		problems.add(f.getName());
+	        	        		FileUtils.moveFileToDirectory(f, problems, true);
+	        	        		lproblems = true;
 	        	        	}
 	        	        }
 	        	    }
 	        		
-	        		if (problems.size()>0) {
-	        			Files.write(Paths.get(directory.getAbsolutePath() + File.separator + "problemes.txt"), problems, Charset.forName("UTF-8"));
-	                	ShowAlert("Hi ha PECs amb problemes.\n\nVeure l'arxiu problemes.txt","Atenció",AlertType.WARNING);
-	        		} else {
-	        			ShowAlert("PECs descomprimides","Procés acabat",AlertType.INFORMATION);
-	        		}
+	        		if (lproblems) ShowAlert("Hi ha PECs amb problemes.\n\nVeure la carpeta problemes","Atenció",AlertType.WARNING);
+	        		else ShowAlert("PECs descomprimides","Procés acabat",AlertType.INFORMATION);
                 } catch (Exception e) {
                 	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
                 }
@@ -162,7 +164,7 @@ public class CorregirController implements Initializable {
                 	try {
                 	    while (it.hasNext()) {
                 	    	String line = it.nextLine();
-                	    	PECs.add(new PEC(Plantilla, line));
+                	    	PECs.add(new PEC(Plantilla, line, presencial.isSelected()));
                 	    }
                 	} catch (Exception e) {
                     	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
@@ -174,7 +176,12 @@ public class CorregirController implements Initializable {
                 }
 
             	for (PEC p : PECs) {
-            		System.out.println(p.dni);
+            		System.out.print(p.dni + "; ");
+            		System.out.print(p.honor + "; ");
+            		for (Resposta r: p.resp) {
+            			System.out.print(r.nom + ": " + r.resp + ";");
+            		}
+            		System.out.println(" ");
             	}
             }
             
@@ -212,7 +219,9 @@ public class CorregirController implements Initializable {
         for (File f : pdfs) {
             if (f.isFile()) {
                 String n = f.getName();
-                String dni = n.substring(n.lastIndexOf("_")+1,n.lastIndexOf("."));
+                String dni = n.substring(n.lastIndexOf("_")+1);
+                dni = dni.substring(0,dni.indexOf("."));
+                //String dni = n.substring(n.lastIndexOf("_")+1,n.lastIndexOf("."));
                 
                 // obrir la PEC
                 try {
@@ -222,7 +231,7 @@ public class CorregirController implements Initializable {
                         // capçalera amb les dades identificatives
                         String c = "'" + form.getField("APE1") + "','" + form.getField("APE2") + "','" + 
                                 form.getField("NOMBRE") + "','" + dni + "'";
-                        if (!presencials.isSelected()) c = c + ((form.getField("HONOR").equalsIgnoreCase("Yes")) ? ",1" : ",0");
+                        if (!presencial.isSelected()) c = c + (form.getField("HONOR").equalsIgnoreCase("Yes") ? ",1" : ",0");
 
                         // loop obtenint les dades dels camps
                         for (Pregunta p : Plantilla) {

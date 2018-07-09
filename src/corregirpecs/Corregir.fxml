@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
@@ -7,7 +11,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="171.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.CorregirController">
+<AnchorPane prefHeight="171.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.CorregirController">
    <children>
       <Label layoutX="16.0" layoutY="15.0" text="Carpeta de treball">
          <font>
@@ -17,16 +21,16 @@
       <TextField fx:id="dir" layoutX="16.0" layoutY="38.0" prefHeight="27.0" prefWidth="432.0" />
       <Button layoutX="456.0" layoutY="38.0" mnemonicParsing="false" onAction="#getDir" prefHeight="27.0" prefWidth="11.0" text="..." />
       <Button layoutX="379.0" layoutY="78.0" mnemonicParsing="false" onAction="#Descomprimir" text="Descomprimir" />
-      <CheckBox fx:id="presencials" layoutX="16.0" layoutY="134.0" mnemonicParsing="false" text="Presencials">
-         <font>
-            <Font size="14.0" />
-         </font>
-      </CheckBox>
-      <CheckBox fx:id="overwrite" layoutX="161.0" layoutY="134.0" mnemonicParsing="false" text="Sobreescriure">
+      <CheckBox fx:id="presencial" layoutX="17.0" layoutY="134.0" mnemonicParsing="false" text="PEC Presencial">
          <font>
             <Font size="14.0" />
          </font>
       </CheckBox>
       <Button layoutX="410.0" layoutY="130.0" mnemonicParsing="false" onAction="#Analitzar" text="Analitzar" />
+      <CheckBox fx:id="overwrite" layoutX="161.0" layoutY="134.0" mnemonicParsing="false" text="Sobreescriure">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </CheckBox>
    </children>
 </AnchorPane>

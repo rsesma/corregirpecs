@@ -2,13 +2,13 @@ package corregirpecs;
 
 public class Resposta {
     public String nom;
-    public String r;
+    public String resp;
     public float punt;
             
     
-    public Resposta(Pregunta p, String r) {
-    	this.r = r;
-    	this.nom = p.nom;
+    public Resposta(String n, String r) {
+    	this.resp = r;
+    	this.nom = n;
     	this.punt = 0;
     }
 }
