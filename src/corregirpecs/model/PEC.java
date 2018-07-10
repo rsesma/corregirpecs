@@ -1,4 +1,4 @@
-package corregirpecs;
+package corregirpecs.model;
 
 import java.util.ArrayList;
 
@@ -10,7 +10,7 @@ public class PEC {
     public PEC(ArrayList<Pregunta> plantilla, String c) {
     	String[] d = c.split(";",-1);
 
-    	// dni de l'alumne i honor: primer token
+    	// dni de l'alumne & honor: primer token
     	String[] t = d[0].split(",");
     	this.dni = t[0];
     	if (t.length>1) this.honor = (t[1].equals("1"));
@@ -18,7 +18,7 @@ public class PEC {
     	// loop per les respostes
     	Integer iConta = 1;
     	for (Pregunta p : plantilla) {
-    		this.resp.add(new Resposta(p.nom,d[iConta]));
+    		this.resp.add(new Resposta(p.nom,d[iConta],p.tipo));
     		iConta = iConta + 1;
     	}
     }

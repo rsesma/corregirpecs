@@ -22,14 +22,27 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import com.itextpdf.text.pdf.AcroFields;
 import com.itextpdf.text.pdf.PdfReader;
 
+import corregirpecs.model.Item;
+import corregirpecs.model.Opcio;
+import corregirpecs.model.PEC;
+import corregirpecs.model.Pregunta;
+import corregirpecs.model.Resposta;
+import corregirpecs.model.Solucio;
+import corregirpecs.model.Stat;
+import corregirpecs.model.Pregunta.Tipo;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 public class CorregirController implements Initializable {
 
@@ -41,8 +54,8 @@ public class CorregirController implements Initializable {
     private CheckBox overwrite;
 
     //private final String C_DEFDIR = System.getProperty("user.home");
-    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     @FXML
     void getDir(ActionEvent event) {
@@ -181,33 +194,53 @@ public class CorregirController implements Initializable {
                 	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
                 }
 
-            	// obtenir l'estadística de les respostes per cada pregunta
+            	// obtenir l'estadística de les respostes per cada pregunta no lliure (numèriques o tipus test)
             	Stat st = new Stat(Plantilla);
             	for (PEC p : PECs) {
             		for (Resposta r: p.resp) {
-            			st.getItem(r.nom).Add(r.resp);
+            			if (r.tipo != Tipo.LLIURE) st.getItem(r.nom).Add(r.resp);
             		}
             	}
             	
             	// obtenir totes les possibles solucions ordenades de major a menor percentatge
-            	Integer count = 1;
             	ArrayList<Solucio> solucions = new ArrayList<Solucio>();
             	for (Item i: st.items) {
-            		solucions.add(new Solucio(count,i,PECs.size()));
-            		count = count + 1;
+            		solucions.add(new Solucio(i,PECs.size()));
             	}
             	
+            	// defecte: l'opció amb més % d'aparació (la primera) és la correcta
             	for (Solucio s: solucions) {
-            		System.out.print(s.num);
-            		System.out.println("- " + s.pregunta);
+                	Opcio o = s.opcions.get(0);
+                	o.correcte = true;
+                	o.solucio = true;
+            	}
+
+                try {
+                    FXMLLoader fxml = new FXMLLoader(getClass().getResource("Analitzar.fxml"));
+                    Parent r = (Parent) fxml.load();
+                    Stage stage = new Stage(); 
+                    stage.initModality(Modality.APPLICATION_MODAL); 
+                    stage.setScene(new Scene(r));
+                    stage.setTitle("Analitzar Solució");
+                    AnalitzarController analitzar = fxml.<AnalitzarController>getController();
+                    analitzar.SetData(solucions);
+                    stage.showAndWait();
+                } catch(Exception e) {
+                	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+                }
+            	
+/*            	for (Solucio s: solucions) {
+            		System.out.println(s.pregunta);
             		for (Opcio o: s.opcions) {
             			System.out.print(o.value + " / ");
-            			System.out.println(o.pct);
+            			System.out.print(o.pct);
+            			System.out.print(" / ");
+            			System.out.print(o.correcte);
+            			System.out.print(" / ");
+            			System.out.println(o.solucio);
             		}
-            	}
+            	}*/
             }
-            
-    		ShowAlert("Proceso acabado","Fin",AlertType.INFORMATION);            
     	}
     }
     

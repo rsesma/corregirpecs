@@ -1,4 +1,4 @@
-package corregirpecs;
+package corregirpecs.model;
 
 public class Opcio {
 	public String value;

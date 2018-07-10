@@ -1,4 +1,4 @@
-package corregirpecs;
+package corregirpecs.model;
 
 import java.util.HashMap;
 
