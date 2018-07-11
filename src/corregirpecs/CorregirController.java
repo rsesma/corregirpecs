@@ -45,7 +45,6 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class CorregirController implements Initializable {
-
     @FXML
     private TextField dir;
     @FXML
@@ -54,8 +53,8 @@ public class CorregirController implements Initializable {
     private CheckBox overwrite;
 
     //private final String C_DEFDIR = System.getProperty("user.home");
-    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     @FXML
     void getDir(ActionEvent event) {
@@ -222,8 +221,8 @@ public class CorregirController implements Initializable {
                     stage.initModality(Modality.APPLICATION_MODAL); 
                     stage.setScene(new Scene(r));
                     stage.setTitle("Analitzar Solució");
-                    AnalitzarController analitzar = fxml.<AnalitzarController>getController();
-                    analitzar.SetData(solucions);
+//                    AnalitzarController analitzar = fxml.<AnalitzarController>getController();
+//                    analitzar.SetData(solucions);
                     stage.showAndWait();
                 } catch(Exception e) {
                 	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);

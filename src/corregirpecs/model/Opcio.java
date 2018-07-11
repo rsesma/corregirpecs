@@ -7,9 +7,11 @@ public class Opcio {
 	public Boolean solucio;
 	
 	public Opcio(String v, Integer f, Integer n) {
-		this.value = v;
-		this.pct = 100 * ((double) f)/n;
-		this.correcte = false;
-		this.solucio = false;
+		if (n>0) {
+			this.value = v;
+			this.pct = 100 * ((double) f)/n;
+			this.correcte = false;
+			this.solucio = false;
+		}
 	}
 }
