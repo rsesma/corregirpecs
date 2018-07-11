@@ -3,9 +3,11 @@ package corregirpecs.model;
 public class PreguntaSol {
 	private String nom;
 	private Boolean anulada;
+	private Boolean changed;
 	
     public PreguntaSol() {
         this.anulada = false;
+        this.changed = false;
     }
     
     public String getNom() {
@@ -22,5 +24,13 @@ public class PreguntaSol {
 
     public void setAnulada(Boolean l) {
         this.anulada = l;
+    }
+    
+    public Boolean getChanged() {
+        return this.changed;
+    }
+
+    public void setChanged(Boolean l) {
+        this.changed = l;
     }
 }

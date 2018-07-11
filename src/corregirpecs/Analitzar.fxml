@@ -5,13 +5,20 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-
 <AnchorPane prefHeight="450.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.AnalitzarController">
    <children>
       <TableView fx:id="preguntas" layoutX="20.0" layoutY="14.0" prefHeight="417.0" prefWidth="175.0">
         <columns>
-          <TableColumn prefWidth="54.0" sortable="false" text="Anul·lar" />
+          <TableColumn fx:id="anulCol" prefWidth="54.0" sortable="false" text="Anul·lar" />
           <TableColumn fx:id="nomCol" editable="false" prefWidth="96.0" sortable="false" text="Pregunta" />
+        </columns>
+      </TableView>
+      <TableView fx:id="respostes" layoutX="217.0" layoutY="14.0" prefHeight="417.0" prefWidth="273.0">
+        <columns>
+          <TableColumn fx:id="respCol" editable="false" prefWidth="84.0" sortable="false" text="Resposta" />
+          <TableColumn fx:id="pctCol" editable="false" prefWidth="62.0" sortable="false" text="\%" />
+            <TableColumn fx:id="corrCol" prefWidth="50.0" sortable="false" text="Corr." />
+            <TableColumn fx:id="solCol" prefWidth="50.0" text="Sol." />
         </columns>
       </TableView>
    </children>
