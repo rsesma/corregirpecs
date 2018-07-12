@@ -18,7 +18,7 @@ public class PEC {
     	// loop per les respostes
     	Integer iConta = 1;
     	for (Pregunta p : plantilla) {
-    		this.resp.add(new Resposta(p.nom,d[iConta],p.tipo));
+    		this.resp.add(new Resposta(p,d[iConta]));
     		iConta = iConta + 1;
     	}
     }

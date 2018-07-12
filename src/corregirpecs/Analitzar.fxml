@@ -46,6 +46,11 @@
                   <KeyCodeCombination alt="DOWN" code="G" control="UP" meta="UP" shift="UP" shortcut="UP" />
                </accelerator>
             </MenuItem>
+            <MenuItem mnemonicParsing="false" onAction="#mnuNotes" text="Generar Notes">
+               <accelerator>
+                  <KeyCodeCombination alt="DOWN" code="N" control="UP" meta="UP" shift="UP" shortcut="UP" />
+               </accelerator>
+            </MenuItem>
         </items>
       </MenuButton>
    </children>

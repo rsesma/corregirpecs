@@ -1,17 +1,17 @@
 package corregirpecs.model;
 
-import corregirpecs.model.Pregunta.Tipo;
-
 public class Resposta {
-    public String nom;
-    public String resp;
+	public Pregunta pregunta;
+    public String resposta;
     public float punt;
-    public Tipo tipo;
     
-    public Resposta(String n, String r, Tipo t) {
-    	this.resp = r;
-    	this.nom = n;
-    	this.tipo = t;
+    public Resposta(Pregunta p, String r) {
+    	this.pregunta = p;
+    	this.resposta = r;
     	this.punt = 0;
+    }
+    
+    public void Corregeix() {
+    	
     }
 }

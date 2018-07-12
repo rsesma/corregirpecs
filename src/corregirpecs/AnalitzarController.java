@@ -90,8 +90,8 @@ public class AnalitzarController implements Initializable {
     private final String C_PROBLEMES = "problemes";
     
     //private final String C_DEFDIR = System.getProperty("user.home");
-    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     
     @Override
@@ -191,7 +191,7 @@ public class AnalitzarController implements Initializable {
         });
         
         // TEST
-        Boolean ltest = false;
+        Boolean ltest = true;
         if (ltest) {
 	        this.dir.setText(C_DEFDIR);
 	        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
@@ -227,7 +227,71 @@ public class AnalitzarController implements Initializable {
     
     @FXML
     public void mnuGraba(ActionEvent event) {
-    	this.Graba();
+    	if (this.CheckDir()) {
+    		this.Graba();
+    	}
+    }
+    
+    @FXML
+    public void mnuNotes(ActionEvent event) {
+    	if (this.CheckDir()) {
+            File folder = new File(dir.getText());
+    		File pecs = new File(dir.getText(),C_PDFS);
+            Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
+
+            if (files.isEmpty()) {
+            	ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
+            } else {
+            	// SOLUCIÓ: arxiu sol.txt 
+            	ArrayList<Pregunta> Plantilla = GetPlantilla(files.iterator().next());
+                	
+                // DADES: si no s'han extret del PDF, extreure-les
+                files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
+                if (files.isEmpty()) GetDadesPECs(folder, pecs, Plantilla);
+                
+                // PECS: respostes de les PECs dels alumnes
+                ArrayList<PEC> PECs = new ArrayList<PEC>();
+            	try {
+            		// obtenir les dades de cada pec, fila a fila
+            		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
+                	try {
+                	    while (it.hasNext()) {
+                	    	String line = it.nextLine();
+                	    	PECs.add(new PEC(Plantilla, line));
+                	    }
+                	} catch (Exception e) {
+                    	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+                    } finally {
+                	    it.close();
+                	}
+            	} catch (Exception e) {
+                	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+                }
+            	
+            	// carregar les solucions a cada pregunta de la plantilla
+            	for (Pregunta p : Plantilla) {
+            		for (Solucio s : this.sol) {
+            			if (s.pregunta.equals(p.nom)) {
+            				p.SetSolucio(s);
+            				break;
+            			}
+            		}
+            	}
+            	
+            	for (PEC p : PECs) {
+            		System.out.println(p.dni);
+            		for (Resposta r : p.resp) {
+            			System.out.println(r.pregunta);
+            			System.out.println(r.resposta);
+            			for (Opcio o : r.pregunta.sol.opcions) {
+            				if (o.correcte) System.out.println("sol: " + o.value);
+            			}
+            		}
+            		break;
+            	}
+            }
+    	}
+    	
     }
     
     public boolean Descomprimir() {
@@ -350,7 +414,7 @@ public class AnalitzarController implements Initializable {
         	Stat st = new Stat(Plantilla);
         	for (PEC p : PECs) {
         		for (Resposta r: p.resp) {
-        			if (r.tipo != Tipo.LLIURE) st.getItem(r.nom).Add(r.resp);
+        			if (r.pregunta.tipo != Tipo.LLIURE) st.getItem(r.pregunta.nom).Add(r.resposta);
         		}
         	}
             	
@@ -417,20 +481,24 @@ public class AnalitzarController implements Initializable {
 	    	    	Solucio s = new Solucio(null,0);
 	    	    	s.pregunta = fields[0];
 	    	    	s.anulada = (fields[1].equals("1"));
-	    	    	String[] opcions = fields[2].split(",",-1);
-	    	    	for (String op: opcions) {
-	    	    		String [] v = op.split("\t",-1);
-	    	    		Opcio o = new Opcio("",0,0);
-	    	    		o.value = v[0];
-	    	    		o.pct = Double.parseDouble(v[1]);
-	    	    		o.correcte = (v[2].equals("1"));
-	    	    		o.solucio = (v[3].equals("1"));
-	    	    		s.opcions.add(o);
+	    	    	s.esLliure = (fields[2].equals("0"));
+	    	    	if (!s.esLliure) {
+		    	    	String[] opcions = fields[2].split(",",-1);
+		    	    	for (String op: opcions) {
+		    	    		String [] v = op.split("\t",-1);
+		    	    		Opcio o = new Opcio("",0,0);
+		    	    		o.value = v[0];
+		    	    		o.pct = Double.parseDouble(v[1]);
+		    	    		o.correcte = (v[2].equals("1"));
+		    	    		o.solucio = (v[3].equals("1"));
+		    	    		s.opcions.add(o);
+		    	    	}
 	    	    	}
 	    	    	this.sol.add(s);
 	    	    }
 	    	    
 	    	    this.SetPreguntes();
+	    	    this.SetOpcions(this.sol.get(0).pregunta);
 	    	} catch (Exception e) {
 	        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
 	        } finally {
@@ -514,9 +582,11 @@ public class AnalitzarController implements Initializable {
     	// obtenir la solució escollida
     	for (Solucio s: this.sol) {
     		if (s.pregunta.equals(p)) {
-    			// carregar les opcions
-    			for (Opcio o: s.opcions) {
-    				this.resps.add(new OpcioSol(o, this.respostes));
+    			if (!s.esLliure ) {
+	    			// carregar les opcions
+	    			for (Opcio o: s.opcions) {
+	    				this.resps.add(new OpcioSol(o, this.respostes));
+	    			}
     			}
     		}
     	}

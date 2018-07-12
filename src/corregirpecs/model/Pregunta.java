@@ -6,15 +6,13 @@ public class Pregunta {
     public Tipo tipo;
     public float w;
     public int numopc;
-    public String correcta;
+    public Solucio sol;
             
     public enum Tipo {
         NUMERICA, TEST, LLIURE
     }
     
-    public Pregunta(String c) {
-    	this.correcta = "";
-    	
+    public Pregunta(String c) {    	
     	String[] d = c.split(",");
     	this.num = Integer.parseInt(d[0]);
     	this.nom = d[1].replace("'", "");
@@ -29,5 +27,9 @@ public class Pregunta {
     	this.w = Float.parseFloat(d[4]);
     	if (this.tipo == Tipo.TEST) this.numopc = Integer.parseInt(d[5]);
     	else this.numopc = 0;
+    }
+    
+    public void SetSolucio(Solucio s) {
+    	this.sol = s;
     }
 }
