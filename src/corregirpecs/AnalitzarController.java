@@ -81,9 +81,17 @@ public class AnalitzarController implements Initializable {
     final ObservableList<PreguntaSol> pregs= FXCollections.observableArrayList();
     final ObservableList<OpcioSol> resps= FXCollections.observableArrayList();
     
+    private final String C_ANALISI = "analisi.txt";
+    private final String C_SOL = "sol.txt";
+    private final String C_DADES_PECS = "dades_pecs.txt";
+    private final String C_ZIP = "*.zip";
+    private final String C_PDF = "*.pdf";
+    private final String C_PDFS = "PDFs";
+    private final String C_PROBLEMES = "problemes";
+    
     //private final String C_DEFDIR = System.getProperty("user.home");
-    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     
     
     @Override
@@ -105,8 +113,7 @@ public class AnalitzarController implements Initializable {
                     public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
                             Boolean newValue) { 
                         p.setAnulada(newValue);
-                        p.setChanged(true);
-                    }
+                     }
                 });
                 return booleanProp;
             }
@@ -184,9 +191,12 @@ public class AnalitzarController implements Initializable {
         });
         
         // TEST
-        this.dir.setText(C_DEFDIR);
-        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
-        this.CarregaAnalisi(files.iterator().next());
+        Boolean ltest = false;
+        if (ltest) {
+	        this.dir.setText(C_DEFDIR);
+	        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
+	        this.CarregaAnalisi(files.iterator().next());
+        }
     }
         
     @FXML
@@ -197,7 +207,7 @@ public class AnalitzarController implements Initializable {
         File folder = directoryChooser.showDialog(null);
         if (folder != null) {
         	dir.setText(folder.getAbsolutePath());
-        	Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
+        	Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter(C_ANALISI), null);
         	if (!files.isEmpty() && files.size() == 1) this.CarregaAnalisi(files.iterator().next());
         	else {
             	this.pregs.clear();
@@ -226,7 +236,7 @@ public class AnalitzarController implements Initializable {
     	if (this.CheckDir()) {
 			// obtenir l'arxiu zip
 	        File directory = new File(dir.getText());
-	        Collection<File> files = FileUtils.listFiles(directory, new WildcardFileFilter("*.zip"), null);
+	        Collection<File> files = FileUtils.listFiles(directory, new WildcardFileFilter(C_ZIP), null);
 	                    
 	        if (files.isEmpty()) {
 	        	ShowAlert("No es troba l'arxiu comprimit","Error",AlertType.ERROR);
@@ -234,7 +244,7 @@ public class AnalitzarController implements Initializable {
 	        	ShowAlert("Hi ha més d'un arxiu comprimit","Error",AlertType.ERROR);
 	        } else {
 	        	File file = files.iterator().next();				// arxiu ZIP
-	        	File folder = new File(dir.getText(),"PDFs");		// carpeta a on es descomprimeix el ZIP 
+	        	File folder = new File(dir.getText(),C_PDFS);		// carpeta a on es descomprimeix el ZIP 
 	        	
 	        	try {
 	            	// la carpeta es crea nova; si ja existeix, s'elimina
@@ -267,7 +277,7 @@ public class AnalitzarController implements Initializable {
 	                
 	        		// comprovar els arxius descomprimits i generar problemes si necessari
 	                Boolean lproblems = false;
-	                File problems = new File(dir.getText(),"problemes");		// carpeta a on es copien les PECs problemàtiques
+	                File problems = new File(dir.getText(),C_PROBLEMES);		// carpeta a on es copien les PECs problemàtiques
 	            	if (problems.exists()) FileUtils.deleteDirectory(problems); 
 	                for (File f : folder.listFiles()) {
 	        			// loop pels arxius no ocults
@@ -304,8 +314,8 @@ public class AnalitzarController implements Initializable {
     
     public void Analitzar() {
         File folder = new File(dir.getText());
-		File pecs = new File(dir.getText(),"PDFs");
-        Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter("sol.txt"), null);
+		File pecs = new File(dir.getText(),C_PDFS);
+        Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
 
         if (files.isEmpty()) {
         	ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
@@ -314,14 +324,14 @@ public class AnalitzarController implements Initializable {
         	ArrayList<Pregunta> Plantilla = GetPlantilla(files.iterator().next());
             	
             // DADES: si no s'han extret del PDF, extreure-les
-            files = FileUtils.listFiles(folder, new WildcardFileFilter("dades_pecs.txt"), null);
+            files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
             if (files.isEmpty()) GetDadesPECs(folder, pecs, Plantilla);
 
             // PECS: respostes de les PECs dels alumnes
             ArrayList<PEC> PECs = new ArrayList<PEC>();
         	try {
         		// obtenir les dades de cada pec, fila a fila
-        		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + "dades_pecs.txt"), "UTF-8");
+        		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
             	try {
             	    while (it.hasNext()) {
             	    	String line = it.nextLine();
@@ -351,9 +361,11 @@ public class AnalitzarController implements Initializable {
         	}
         	// defecte: l'opció amb més % d'aparació (la primera) és la correcta
         	for (Solucio s: this.sol) {
-            	Opcio o = s.opcions.get(0);
-            	o.correcte = true;
-            	o.solucio = true;
+        		if (!s.esLliure) {
+	            	Opcio o = s.opcions.get(0);
+	            	o.correcte = true;
+	            	o.solucio = true;
+        		}
         	}
         	
         	this.Graba();		// grabar les dades a un arxiu txt al disc
@@ -370,18 +382,23 @@ public class AnalitzarController implements Initializable {
             for (Solucio s : this.sol) {
             	// nom de la pregunta + anulada?
             	String c = s.pregunta + ";" + (s.anulada ? "1" : "0") + ";";
-            	Boolean lfirst = true;
-            	for (Opcio o : s.opcions) {
-            		c = c + (lfirst ? "" : ",") + o.value + "\t" + formatter.format(o.pct).replace(",", ".");
-            		c = c + "\t" + (o.correcte ? "1" : "0") + "\t" + (o.solucio ? "1" : "0");
-            		lfirst = false;
+            	if (!s.esLliure) {
+	            	Boolean lfirst = true;
+	            	for (Opcio o : s.opcions) {
+	            		c = c + (lfirst ? "" : ",") + o.value + "\t" + formatter.format(o.pct).replace(",", ".");
+	            		c = c + "\t" + (o.correcte ? "1" : "0") + "\t" + (o.solucio ? "1" : "0");
+	            		lfirst = false;
+	            	}
+            	} else {
+            		c = c + "0";
             	}
+            	
             	lines.add(c);
             }
             
             // escriure l'arxiu analisi.txt
             try {
-            	Files.write(Paths.get(dir.getText() + File.separator + "analisi.txt"), lines, Charset.forName("UTF-8"));
+            	Files.write(Paths.get(dir.getText() + File.separator + C_ANALISI), lines, Charset.forName("UTF-8"));
             } catch (Exception e) {
             	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
             }
@@ -449,14 +466,13 @@ public class AnalitzarController implements Initializable {
 	
     public void GetDadesPECs(File folder, File pecs, ArrayList<Pregunta> Plantilla) {
     	// loop per les PECs (arxius PDF) de la carpeta PDFs
-    	Collection<File> pdfs = FileUtils.listFiles(pecs, new WildcardFileFilter("*.pdf"), null);
+    	Collection<File> pdfs = FileUtils.listFiles(pecs, new WildcardFileFilter(C_PDF), null);
         List<String> lines = new ArrayList<>();
         for (File f : pdfs) {
             if (f.isFile()) {
                 String n = f.getName();
                 String dni = n.substring(n.lastIndexOf("_")+1);
                 dni = dni.substring(0,dni.indexOf("."));
-                //String dni = n.substring(n.lastIndexOf("_")+1,n.lastIndexOf("."));
                 
                 // obrir la PEC
                 try {
@@ -486,7 +502,7 @@ public class AnalitzarController implements Initializable {
         
         // escriure l'arxiu dades_pecs.txt
         try {
-        	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + "dades_pecs.txt"), lines, Charset.forName("UTF-8"));
+        	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_PECS), lines, Charset.forName("UTF-8"));
         } catch (Exception e) {
         	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
         }
@@ -500,7 +516,7 @@ public class AnalitzarController implements Initializable {
     		if (s.pregunta.equals(p)) {
     			// carregar les opcions
     			for (Opcio o: s.opcions) {
-    				this.resps.add(new OpcioSol(o, this.respostes, s));
+    				this.resps.add(new OpcioSol(o, this.respostes));
     			}
     		}
     	}
@@ -508,9 +524,8 @@ public class AnalitzarController implements Initializable {
     
     public void SetPreguntes() {
         for (Solucio s: this.sol) {
-        	PreguntaSol p = new PreguntaSol();
-        	p.setNom(s.pregunta);
-            this.pregs.add(p);
+        	PreguntaSol p = new PreguntaSol(s);
+             this.pregs.add(p);
         }
         
         this.preguntas.requestFocus();

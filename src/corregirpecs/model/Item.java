@@ -2,12 +2,16 @@ package corregirpecs.model;
 
 import java.util.HashMap;
 
+import corregirpecs.model.Pregunta.Tipo;
+
 public class Item {
     public String pregunta;
+    public Boolean esLliure;
     HashMap<String, Integer> hm;
 
-    public Item(String p) {
-    	this.pregunta= p;
+    public Item(Pregunta p) {
+    	this.pregunta= p.nom;
+    	this.esLliure = (p.tipo == Tipo.LLIURE);
     	this.hm = new HashMap<>();
     }
     

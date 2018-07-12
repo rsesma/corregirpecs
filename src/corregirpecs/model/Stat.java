@@ -7,7 +7,7 @@ public class Stat {
 	
 	public Stat(ArrayList<Pregunta> plantilla) {
 		for (Pregunta p: plantilla) {
-			this.items.add(new Item(p.nom));
+			this.items.add(new Item(p));
 		}
 	}
 	

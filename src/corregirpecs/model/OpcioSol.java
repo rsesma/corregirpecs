@@ -11,22 +11,20 @@ public class OpcioSol {
 	private String valor;
 	private String pct;
 	private Boolean correcte;
-	private Boolean solucio;
-	private Boolean changed;
+	public Boolean solucio;
 	
-	private Solucio sol;
+	public Opcio op;
 	private TableView<OpcioSol> respostes;
 	
-    public OpcioSol(Opcio o, TableView<OpcioSol> r, Solucio sol) {
+    public OpcioSol(Opcio o, TableView<OpcioSol> respostes) {
         this.valor = o.value;
         NumberFormat formatter = new DecimalFormat("##0.000");     
         this.pct = formatter.format(o.pct);
         this.correcte = o.correcte;
         this.solucio = o.solucio;
         
-        this.changed = false;
-        this.respostes = r;
-        this.sol = sol;
+        this.respostes = respostes;
+        this.op = o;
     }
     
     public String getValor() {
@@ -50,11 +48,26 @@ public class OpcioSol {
     }
 
     public void setCorrecte(Boolean l) {
-    	if (this.sol.UpdateCorrecte(this.valor, l)) {
-    		this.correcte = l;
-    	} else {
-    		ShowAlert("Hi ha d'haver almenys una opció correcte","Error",AlertType.ERROR);
+    	// controlar que hi ha almenys una opció correcta, i que la solució és correcta
+		Boolean last = true;
+		Boolean solucio = false;
+    	for (OpcioSol o : this.respostes.getItems()) {
+    		if (!o.valor.equals(this.valor)) {
+				if (o.correcte) last = false;
+			} else {
+				if (o.solucio) solucio = true;
+			}
+    	}
+    	
+    	if (last && !l) {
+    		ShowAlert("Hi ha d'haver almenys una opció correcta","Atenció",AlertType.WARNING);
     		this.respostes.refresh();
+    	} else if (solucio && !l) {
+    		ShowAlert("La opció solució ha de ser també la correcta","Atenció",AlertType.WARNING);
+    		this.respostes.refresh();
+    	} else {
+    		this.op.correcte = l;
+    		this.correcte = l;
     	}
     }
     
@@ -63,15 +76,24 @@ public class OpcioSol {
     }
 
     public void setSolucio(Boolean l) {
-        this.solucio = l;
-    }
-
-    public Boolean getChanged() {
-        return this.changed;
-    }
-
-    public void setChanged(Boolean l) {
-        this.changed = l;
+    	
+    	if (this.solucio && !l) {
+    		ShowAlert("Hi ha d'haver almenys una opció solució","Atenció",AlertType.WARNING);
+    		this.respostes.refresh();
+    	} else {
+        	for (OpcioSol o : this.respostes.getItems()) {
+        		if (o.solucio) {
+    				o.solucio = false;
+    				o.op.solucio = false;
+    			}
+        	}
+    		this.op.solucio = l;
+    		this.solucio = l;
+    		
+    		this.correcte = true;
+    		this.op.correcte = true;
+			this.respostes.refresh();
+    	}
     }
     
     public void ShowAlert(String message, String title, AlertType type) {
