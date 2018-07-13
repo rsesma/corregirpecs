@@ -41,8 +41,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableCell;
@@ -52,10 +55,18 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 
 public class AnalitzarController implements Initializable {
     
+    //private final String C_DEFDIR = System.getProperty("user.home");
+    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    private final Boolean L_TEST = true;
+
+	
     @FXML
     private TextField dir;
 
@@ -88,11 +99,7 @@ public class AnalitzarController implements Initializable {
     private final String C_PDF = "*.pdf";
     private final String C_PDFS = "PDFs";
     private final String C_PROBLEMES = "problemes";
-    
-    //private final String C_DEFDIR = System.getProperty("user.home");
-    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
-    
+        
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -191,8 +198,7 @@ public class AnalitzarController implements Initializable {
         });
         
         // TEST
-        Boolean ltest = true;
-        if (ltest) {
+        if (L_TEST) {
 	        this.dir.setText(C_DEFDIR);
 	        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
 	        this.CarregaAnalisi(files.iterator().next());
@@ -235,63 +241,87 @@ public class AnalitzarController implements Initializable {
     @FXML
     public void mnuNotes(ActionEvent event) {
     	if (this.CheckDir()) {
-            File folder = new File(dir.getText());
-    		File pecs = new File(dir.getText(),C_PDFS);
-            Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
+    		ArrayList<Pregunta> Solucio = this.GetSolucio();
+    		if (Solucio.size()>0) {
+    			ArrayList<PEC> PECs = this.GetPECs(Solucio);
+    			if (PECs.size()>0) {
+	            	// carregar les solucions a cada pregunta de la plantilla i calcular la suma de pesos
+    				float wsum = 0;
+	            	for (Pregunta p : Solucio) {
+	            		wsum = wsum + p.w;
+	            		for (Solucio s : this.sol) {
+	            			if (s.pregunta.equals(p.nom)) {
+	            				p.SetSolucio(s);
+	            				break;
+	            			}
+	            		}
+	            	}
+	            	
+	            	// calcular la nota de cada PEC 	            	
+	            	for (PEC p : PECs) {
+	            		p.CalculaNota(wsum);
+	            	}
+	            	
+	            	// mostrar la finestra amb les notes calculades
+	                try {
+	                    FXMLLoader fxml = new FXMLLoader(getClass().getResource("Notes.fxml"));
+	                    Parent r = (Parent) fxml.load();
+	                    Stage stage = new Stage();
+	                    stage.initModality(Modality.APPLICATION_MODAL);
+	                    stage.setScene(new Scene(r));
+	                    stage.setTitle("Notes");
+	                    NotesController notes = fxml.<NotesController>getController();
+	                    notes.SetData(PECs);
+	                    stage.showAndWait();
+	                } catch(Exception e) {
+	                    System.out.println(e.getMessage());
+	                }
 
-            if (files.isEmpty()) {
-            	ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
-            } else {
-            	// SOLUCIÓ: arxiu sol.txt 
-            	ArrayList<Pregunta> Plantilla = GetPlantilla(files.iterator().next());
-                	
-                // DADES: si no s'han extret del PDF, extreure-les
-                files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
-                if (files.isEmpty()) GetDadesPECs(folder, pecs, Plantilla);
-                
-                // PECS: respostes de les PECs dels alumnes
-                ArrayList<PEC> PECs = new ArrayList<PEC>();
-            	try {
-            		// obtenir les dades de cada pec, fila a fila
-            		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
-                	try {
-                	    while (it.hasNext()) {
-                	    	String line = it.nextLine();
-                	    	PECs.add(new PEC(Plantilla, line));
-                	    }
-                	} catch (Exception e) {
-                    	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
-                    } finally {
-                	    it.close();
-                	}
-            	} catch (Exception e) {
-                	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
-                }
-            	
-            	// carregar les solucions a cada pregunta de la plantilla
-            	for (Pregunta p : Plantilla) {
-            		for (Solucio s : this.sol) {
-            			if (s.pregunta.equals(p.nom)) {
-            				p.SetSolucio(s);
-            				break;
-            			}
-            		}
-            	}
-            	
-            	for (PEC p : PECs) {
-            		System.out.println(p.dni);
-            		for (Resposta r : p.resp) {
-            			System.out.println(r.pregunta);
-            			System.out.println(r.resposta);
-            			for (Opcio o : r.pregunta.sol.opcions) {
-            				if (o.correcte) System.out.println("sol: " + o.value);
-            			}
-            		}
-            		break;
-            	}
-            }
+    			}
+    		}
     	}
     	
+    }
+    
+    public ArrayList<Pregunta> GetSolucio() {
+    	// SOLUCIÓ: arxiu sol.txt
+        ArrayList<Pregunta> Solucio = new ArrayList<Pregunta>();
+        
+    	File folder = new File(dir.getText());
+        Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
+        if (files.isEmpty()) ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
+        else Solucio = GetPlantilla(files.iterator().next());
+
+        return Solucio;
+    }
+
+    public ArrayList<PEC> GetPECs(ArrayList<Pregunta> Solucio) {
+        // PECS: respostes de les PECs dels alumnes
+    	ArrayList<PEC> PECs = new ArrayList<PEC>();
+    	
+    	File folder = new File(dir.getText());
+        // DADES: si no s'han extret del PDF, extreure-les
+    	Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
+        if (files.isEmpty()) GetDadesPECs(folder, new File(dir.getText(),C_PDFS), Solucio);
+
+    	try {
+    		// obtenir les dades de cada pec, fila a fila
+    		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
+        	try {
+        	    while (it.hasNext()) {
+        	    	String line = it.nextLine();
+        	    	PECs.add(new PEC(Solucio, line));
+        	    }
+        	} catch (Exception e) {
+            	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+            } finally {
+        	    it.close();
+        	}
+    	} catch (Exception e) {
+        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+        }
+    	
+        return PECs;
     }
     
     public boolean Descomprimir() {
@@ -377,65 +407,40 @@ public class AnalitzarController implements Initializable {
 	}
     
     public void Analitzar() {
-        File folder = new File(dir.getText());
-		File pecs = new File(dir.getText(),C_PDFS);
-        Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
-
-        if (files.isEmpty()) {
-        	ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
-        } else {
-        	// SOLUCIÓ: arxiu sol.txt 
-        	ArrayList<Pregunta> Plantilla = GetPlantilla(files.iterator().next());
-            	
-            // DADES: si no s'han extret del PDF, extreure-les
-            files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
-            if (files.isEmpty()) GetDadesPECs(folder, pecs, Plantilla);
-
-            // PECS: respostes de les PECs dels alumnes
-            ArrayList<PEC> PECs = new ArrayList<PEC>();
-        	try {
-        		// obtenir les dades de cada pec, fila a fila
-        		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
-            	try {
-            	    while (it.hasNext()) {
-            	    	String line = it.nextLine();
-            	    	PECs.add(new PEC(Plantilla, line));
-            	    }
-            	} catch (Exception e) {
-                	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
-                } finally {
-            	    it.close();
-            	}
-        	} catch (Exception e) {
-            	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
-            }
-
-        	// obtenir l'estadística de les respostes per cada pregunta no lliure (numèriques o tipus test)
-        	Stat st = new Stat(Plantilla);
-        	for (PEC p : PECs) {
-        		for (Resposta r: p.resp) {
-        			if (r.pregunta.tipo != Tipo.LLIURE) st.getItem(r.pregunta.nom).Add(r.resposta);
-        		}
-        	}
-            	
-        	// obtenir totes les possibles solucions ordenades de major a menor percentatge
-        	this.sol = new ArrayList<Solucio>();
-        	for (Item i: st.items) {
-        		this.sol.add(new Solucio(i,PECs.size()));
-        	}
-        	// defecte: l'opció amb més % d'aparació (la primera) és la correcta
-        	for (Solucio s: this.sol) {
-        		if (!s.esLliure) {
-	            	Opcio o = s.opcions.get(0);
-	            	o.correcte = true;
-	            	o.solucio = true;
-        		}
-        	}
-        	
-        	this.Graba();		// grabar les dades a un arxiu txt al disc
-        	
-        	// carregar les llistes amb les dades
-        	this.SetPreguntes();
+    	if (this.CheckDir()) {
+    		ArrayList<Pregunta> Solucio = this.GetSolucio();
+    		if (Solucio.size()>0) {
+    			ArrayList<PEC> PECs = this.GetPECs(Solucio);
+    			
+    			if (PECs.size()>0) {
+		        	// obtenir l'estadística de les respostes per cada pregunta no lliure (numèriques o tipus test)
+		        	Stat st = new Stat(Solucio);
+		        	for (PEC p : PECs) {
+		        		for (Resposta r: p.resp) {
+		        			if (r.pregunta.tipo != Tipo.LLIURE) st.getItem(r.pregunta.nom).Add(r.resposta);
+		        		}
+		        	}
+		            	
+		        	// obtenir totes les possibles solucions ordenades de major a menor percentatge
+		        	this.sol = new ArrayList<Solucio>();
+		        	for (Item i: st.items) {
+		        		this.sol.add(new Solucio(i,PECs.size()));
+		        	}
+		        	// defecte: l'opció amb més % d'aparació (la primera) és la correcta
+		        	for (Solucio s: this.sol) {
+		        		if (!s.esLliure) {
+			            	Opcio o = s.opcions.get(0);
+			            	o.correcte = true;
+			            	o.solucio = true;
+		        		}
+		        	}
+		        	
+		        	this.Graba();		// grabar les dades a un arxiu txt al disc
+		        	
+		        	// carregar les llistes amb les dades
+		        	this.SetPreguntes();
+    			}
+    		}
     	}
     }
     

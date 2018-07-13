@@ -6,6 +6,7 @@ public class PEC {
     public String dni;
     public Boolean honor;
     public ArrayList<Resposta> resp = new ArrayList<Resposta>();
+    public float nota;
     
     public PEC(ArrayList<Pregunta> plantilla, String c) {
     	String[] d = c.split(";",-1);
@@ -21,5 +22,15 @@ public class PEC {
     		this.resp.add(new Resposta(p,d[iConta]));
     		iConta = iConta + 1;
     	}
+    }
+    
+    public void CalculaNota(Float wsum) {
+		this.nota = 0;
+    	for (Resposta r : this.resp) {
+			r.Corregeix();
+			this.nota = this.nota + r.punt;
+		}
+    	this.nota = 10* (this.nota/wsum);
+    	this.nota = Math.round(this.nota*10f)/10f;
     }
 }

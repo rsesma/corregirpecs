@@ -1,13 +1,17 @@
 package corregirpecs.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 public class Pregunta {
     public int num;
     public String nom;
     public Tipo tipo;
     public float w;
     public int numopc;
-    public Solucio sol;
-            
+    public Boolean anulada;
+    public ArrayList<Opcio> correctes = new ArrayList<Opcio>();
+
     public enum Tipo {
         NUMERICA, TEST, LLIURE
     }
@@ -30,6 +34,11 @@ public class Pregunta {
     }
     
     public void SetSolucio(Solucio s) {
-    	this.sol = s;
+    	this.anulada = s.anulada;    	
+    	// afegir les opcions correctes i posar primer la solució
+    	for (Opcio o: s.opcions) {
+    		if (o.correcte) this.correctes.add(o);
+    	}
+    	Collections.sort(this.correctes, (o1, o2) -> o2.solucio.compareTo(o1.solucio));
     }
 }

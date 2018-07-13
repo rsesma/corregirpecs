@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="600.0" prefWidth="397.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.NotesController">
+   <children>
+      <TableView fx:id="notas" layoutX="21.0" layoutY="14.0" prefHeight="570.0" prefWidth="225.0">
+        <columns>
+          <TableColumn fx:id="dniCol" editable="false" prefWidth="111.0" sortable="false" text="DNI / NIE" />
+          <TableColumn fx:id="notaCol" editable="false" prefWidth="70.0" sortable="false" text="Nota" />
+        </columns>
+      </TableView>
+   </children>
+</AnchorPane>
