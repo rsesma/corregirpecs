@@ -8,13 +8,15 @@ import javafx.stage.Stage;
 
 public class Corregir extends Application {
 
+	private final String C_CORREGIR = "Corregir PECs";
+	
 	@Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("Analitzar.fxml"));
         
         Scene scene = new Scene(root);
         
-        stage.setTitle("Corregir PECs");
+        stage.setTitle(C_CORREGIR);
         stage.setScene(scene);
         stage.show();
 	}

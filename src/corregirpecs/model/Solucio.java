@@ -20,7 +20,7 @@ public class Solucio {
 				for (Entry<String, Integer> entry : i.hm.entrySet()) {
 					this.opcions.add(new Opcio(entry.getKey(), entry.getValue(), size));
 				}
-				// ordenar de major a menor % d'aparació
+				// descendent sort
 		    	Collections.sort(this.opcions, (o1, o2) -> o2.pct.compareTo(o1.pct));
 			}
 		}

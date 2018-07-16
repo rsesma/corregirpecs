@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -63,7 +64,8 @@ public class AnalitzarController implements Initializable {
     
     //private final String C_DEFDIR = System.getProperty("user.home");
     //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
     private final Boolean L_TEST = true;
 
 	
@@ -85,7 +87,7 @@ public class AnalitzarController implements Initializable {
     @FXML
     private TableColumn<OpcioSol, Boolean> corrCol;
     @FXML
-    private TableColumn<OpcioSol, Boolean> solCol;
+    private TableColumn<OpcioSol, Boolean> solCol;    
 
     private ArrayList<Solucio> sol;
     
@@ -93,28 +95,41 @@ public class AnalitzarController implements Initializable {
     final ObservableList<OpcioSol> resps= FXCollections.observableArrayList();
     
     private final String C_ANALISI = "analisi.txt";
-    private final String C_SOL = "sol.txt";
+    private final String C_SOL = "solucio.txt";
     private final String C_DADES_PECS = "dades_pecs.txt";
+    private final String C_DADES_ANC = "dades_anc.txt";
     private final String C_ZIP = "*.zip";
     private final String C_PDF = "*.pdf";
     private final String C_PDFS = "PDFs";
     private final String C_PROBLEMES = "problemes";
-        
+    
+    private final String C_ERROR = "Error";
+    private final String C_ATENCIO = "Atenció";
+    private final String C_SELECCIONAR_CARPETA = "Seleccionar carpeta de treball";
+    private final String C_NO_ES_TROBA_SOL = "No es troba l'arxiu " + C_SOL;
+    private final String C_NO_ES_TROBA_ZIP = "No es troba l'arxiu comprimit";
+    private final String C_MASSA_ZIPS = "Hi ha més d'un arxiu comprimit";
+    private final String C_HI_HA_PROBLEMES = "Hi ha PECs amb problemes.\n\nVeure la carpeta problemes";
+    private final String C_FINAL = "Procés finalitzat";
+    private final String C_INDICAR_CARPETA = "Indicar la carpeta de treball";
+    private final String C_CARPETA_NO_EXISTEIX = "La carpeta de treball no existeix";
+    private final String C_GRABACIO_COMPLETADA = "Grabació completada";
+    
     
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         
-        // configurar taula de preguntes
+        // config preguntas table
         this.preguntas.setEditable(true);
         this.preguntas.setItems(this.pregs);
         this.nomCol.setCellValueFactory(new PropertyValueFactory<>("Nom"));        
-        // checkbox anul·lar
+        // checkbox anular
         this.anulCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<PreguntaSol, Boolean>, ObservableValue<Boolean>>() {
             @Override
             public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<PreguntaSol, Boolean> param) {
                 PreguntaSol p = param.getValue();
                 SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getAnulada());
-                // When "Anul·lar" column change.
+                // when column change
                 booleanProp.addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
@@ -133,14 +148,14 @@ public class AnalitzarController implements Initializable {
                 return cell;
             }
         });
-        // canvi de pregunta
+        // pregunta change: refresh repostes table
         this.preguntas.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
             	this.SetOpcions(newSelection.getNom());
             }
         });
 
-        // configurar taula de respostes
+        // config respostes table
         this.respostes.setEditable(true);
         this.respostes.setItems(this.resps);
         this.respCol.setCellValueFactory(new PropertyValueFactory<>("Valor"));
@@ -151,7 +166,7 @@ public class AnalitzarController implements Initializable {
             public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<OpcioSol, Boolean> param) {
                 OpcioSol o = param.getValue();
                 SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(o.getCorrecte());
-                // When "Anul·lar" column change.
+                // when column change
                 booleanProp.addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
@@ -177,7 +192,7 @@ public class AnalitzarController implements Initializable {
             public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<OpcioSol, Boolean> param) {
                 OpcioSol o = param.getValue();
                 SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(o.getSolucio());
-                // When "Anul·lar" column change.
+                // when column change
                 booleanProp.addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
@@ -208,7 +223,7 @@ public class AnalitzarController implements Initializable {
     @FXML
     void getDir(ActionEvent event) {
         final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle("Seleccionar carpeta de treball");
+        directoryChooser.setTitle(C_SELECCIONAR_CARPETA);
         directoryChooser.setInitialDirectory(new File(C_DEFDIR));
         File folder = directoryChooser.showDialog(null);
         if (folder != null) {
@@ -245,7 +260,7 @@ public class AnalitzarController implements Initializable {
     		if (Solucio.size()>0) {
     			ArrayList<PEC> PECs = this.GetPECs(Solucio);
     			if (PECs.size()>0) {
-	            	// carregar les solucions a cada pregunta de la plantilla i calcular la suma de pesos
+	            	// load solucions to each plantilla and sum of weights
     				float wsum = 0;
 	            	for (Pregunta p : Solucio) {
 	            		wsum = wsum + p.w;
@@ -257,12 +272,34 @@ public class AnalitzarController implements Initializable {
 	            		}
 	            	}
 	            	
-	            	// calcular la nota de cada PEC 	            	
+	            	// compute PEC nota 	            	
 	            	for (PEC p : PECs) {
 	            		p.CalculaNota(wsum);
 	            	}
 	            	
-	            	// mostrar la finestra amb les notes calculades
+	            	
+            		// get curs, any, numpec if exists
+	            	String anc = "";
+	            	Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter(C_DADES_ANC), null);
+	                if (!files.isEmpty()) {
+		            	try {
+		            		// get curs, any, 
+		            		LineIterator it = FileUtils.lineIterator(files.iterator().next(), "UTF-8");
+		                	try {
+		                	    while (it.hasNext()) {
+		                	    	anc = it.nextLine();
+		                	    }
+		                	} catch (Exception e) {
+		                    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+		                    } finally {
+		                	    it.close();
+		                	}
+		            	} catch (Exception e) {
+		                	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+		                }
+	                }
+	            	
+	            	// show computed notas
 	                try {
 	                    FXMLLoader fxml = new FXMLLoader(getClass().getResource("Notes.fxml"));
 	                    Parent r = (Parent) fxml.load();
@@ -271,7 +308,7 @@ public class AnalitzarController implements Initializable {
 	                    stage.setScene(new Scene(r));
 	                    stage.setTitle("Notes");
 	                    NotesController notes = fxml.<NotesController>getController();
-	                    notes.SetData(PECs);
+	                    notes.SetData(PECs,anc,this.dir.getText());
 	                    stage.showAndWait();
 	                } catch(Exception e) {
 	                    System.out.println(e.getMessage());
@@ -289,23 +326,23 @@ public class AnalitzarController implements Initializable {
         
     	File folder = new File(dir.getText());
         Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
-        if (files.isEmpty()) ShowAlert("No es troba l'arxiu sol.txt","Error",AlertType.ERROR);
+        if (files.isEmpty()) ShowAlert(C_NO_ES_TROBA_SOL,C_ERROR,AlertType.ERROR);
         else Solucio = GetPlantilla(files.iterator().next());
 
         return Solucio;
     }
 
     public ArrayList<PEC> GetPECs(ArrayList<Pregunta> Solucio) {
-        // PECS: respostes de les PECs dels alumnes
+        // PECS: respostes of the alumnes PECs
     	ArrayList<PEC> PECs = new ArrayList<PEC>();
     	
     	File folder = new File(dir.getText());
-        // DADES: si no s'han extret del PDF, extreure-les
+        // DADES: unzip and create PDFs folder (if not exists)
     	Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
         if (files.isEmpty()) GetDadesPECs(folder, new File(dir.getText(),C_PDFS), Solucio);
 
     	try {
-    		// obtenir les dades de cada pec, fila a fila
+    		// get data, line by line
     		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
         	try {
         	    while (it.hasNext()) {
@@ -313,12 +350,12 @@ public class AnalitzarController implements Initializable {
         	    	PECs.add(new PEC(Solucio, line));
         	    }
         	} catch (Exception e) {
-            	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
             } finally {
         	    it.close();
         	}
     	} catch (Exception e) {
-        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
         }
     	
         return PECs;
@@ -328,14 +365,14 @@ public class AnalitzarController implements Initializable {
 		Boolean lreturn = false;
 		
     	if (this.CheckDir()) {
-			// obtenir l'arxiu zip
+			// zip file
 	        File directory = new File(dir.getText());
 	        Collection<File> files = FileUtils.listFiles(directory, new WildcardFileFilter(C_ZIP), null);
 	                    
 	        if (files.isEmpty()) {
-	        	ShowAlert("No es troba l'arxiu comprimit","Error",AlertType.ERROR);
+	        	ShowAlert(C_NO_ES_TROBA_ZIP,C_ERROR,AlertType.ERROR);
 	        } else if (files.size() > 1) {
-	        	ShowAlert("Hi ha més d'un arxiu comprimit","Error",AlertType.ERROR);
+	        	ShowAlert(C_MASSA_ZIPS,C_ERROR,AlertType.ERROR);
 	        } else {
 	        	File file = files.iterator().next();				// arxiu ZIP
 	        	File folder = new File(dir.getText(),C_PDFS);		// carpeta a on es descomprimeix el ZIP 
@@ -369,20 +406,22 @@ public class AnalitzarController implements Initializable {
 	                zis.closeEntry();
 	                zis.close();
 	                
-	        		// comprovar els arxius descomprimits i generar problemes si necessari
+	        		// check unzipped files and move to problemes if necessary
 	                Boolean lproblems = false;
-	                File problems = new File(dir.getText(),C_PROBLEMES);		// carpeta a on es copien les PECs problemàtiques
+	                File problems = new File(dir.getText(),C_PROBLEMES);		// folder for problem files
 	            	if (problems.exists()) FileUtils.deleteDirectory(problems); 
 	                for (File f : folder.listFiles()) {
-	        			// loop pels arxius no ocults
+	        			// loop for not hidden files
 	        	        if (f.isFile() && !f.isHidden()) {
-	        	        	// és un PDF?
+	        	        	// PDF?
 	        	        	String ext = FilenameUtils.getExtension(f.getName());
 	        	        	if (ext.equalsIgnoreCase("pdf")) {
 	        	                PdfReader reader = new PdfReader(f.getAbsolutePath());
 	        	                AcroFields form = reader.getAcroFields();
-	        	                // té camps?
-	        	                if (!(form.getFields().size()>0)) {
+	        	                int nsize = form.getFields().size();
+	        	                reader.close();
+	        	                // fields?
+	        	                if (!(nsize>0)) {
 	        	                	FileUtils.moveFileToDirectory(f, problems, true);
 	        	                	lproblems = true;
 	        	                }
@@ -393,12 +432,12 @@ public class AnalitzarController implements Initializable {
 	        	        }
 	        	    }
 	        		
-	        		if (lproblems) ShowAlert("Hi ha PECs amb problemes.\n\nVeure la carpeta problemes","Atenció",AlertType.WARNING);
-	        		else ShowAlert("PECs descomprimides","Procés acabat",AlertType.INFORMATION);
+	        		if (lproblems) ShowAlert(C_HI_HA_PROBLEMES,C_ATENCIO,AlertType.WARNING);
+	        		else ShowAlert(C_FINAL,"",AlertType.INFORMATION);
 	        		
 	        		lreturn = true;
 	            } catch (Exception e) {
-	            	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+	            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	            }
 	        }
 		}
@@ -413,7 +452,7 @@ public class AnalitzarController implements Initializable {
     			ArrayList<PEC> PECs = this.GetPECs(Solucio);
     			
     			if (PECs.size()>0) {
-		        	// obtenir l'estadística de les respostes per cada pregunta no lliure (numèriques o tipus test)
+		        	// respostes statistic for each pregunta no lliure (numèriques or tipus test)
 		        	Stat st = new Stat(Solucio);
 		        	for (PEC p : PECs) {
 		        		for (Resposta r: p.resp) {
@@ -421,12 +460,12 @@ public class AnalitzarController implements Initializable {
 		        		}
 		        	}
 		            	
-		        	// obtenir totes les possibles solucions ordenades de major a menor percentatge
+		        	// get all possibles solucions sort in descendant order of % 
 		        	this.sol = new ArrayList<Solucio>();
 		        	for (Item i: st.items) {
 		        		this.sol.add(new Solucio(i,PECs.size()));
 		        	}
-		        	// defecte: l'opció amb més % d'aparació (la primera) és la correcta
+		        	// default: the most frequent (% - the 1st) option is correcte & solucio
 		        	for (Solucio s: this.sol) {
 		        		if (!s.esLliure) {
 			            	Opcio o = s.opcions.get(0);
@@ -435,9 +474,9 @@ public class AnalitzarController implements Initializable {
 		        		}
 		        	}
 		        	
-		        	this.Graba();		// grabar les dades a un arxiu txt al disc
+		        	this.Graba();		// save to file
 		        	
-		        	// carregar les llistes amb les dades
+		        	// load table views
 		        	this.SetPreguntes();
     			}
     		}
@@ -449,7 +488,6 @@ public class AnalitzarController implements Initializable {
     	if (this.CheckDir()) {
             List<String> lines = new ArrayList<>();
             for (Solucio s : this.sol) {
-            	// nom de la pregunta + anulada?
             	String c = s.pregunta + ";" + (s.anulada ? "1" : "0") + ";";
             	if (!s.esLliure) {
 	            	Boolean lfirst = true;
@@ -465,11 +503,12 @@ public class AnalitzarController implements Initializable {
             	lines.add(c);
             }
             
-            // escriure l'arxiu analisi.txt
+            // write file
             try {
             	Files.write(Paths.get(dir.getText() + File.separator + C_ANALISI), lines, Charset.forName("UTF-8"));
+            	ShowAlert(C_GRABACIO_COMPLETADA,"",AlertType.INFORMATION);
             } catch (Exception e) {
-            	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
             }
     	}
     }
@@ -477,7 +516,6 @@ public class AnalitzarController implements Initializable {
     public void CarregaAnalisi(File f) {
     	this.sol = new ArrayList<Solucio>();
 		try {
-			// obtenir les files de la solució una a una
 			LineIterator it = FileUtils.lineIterator(f, "UTF-8");
 	    	try {
 	    	    while (it.hasNext()) {
@@ -505,19 +543,18 @@ public class AnalitzarController implements Initializable {
 	    	    this.SetPreguntes();
 	    	    this.SetOpcions(this.sol.get(0).pregunta);
 	    	} catch (Exception e) {
-	        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	        } finally {
 	    	    it.close();
 	    	}
 	    } catch (Exception e) {
-	    	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	    }
     }
 
 	public ArrayList<Pregunta> GetPlantilla(File f) {
 		ArrayList<Pregunta> Plantilla = new ArrayList<Pregunta>();
 		try {
-			// obtenir les files de la solució una a una
 			LineIterator it = FileUtils.lineIterator(f, "UTF-8");
 	    	try {
 	    		Boolean lfirst = true;
@@ -527,68 +564,90 @@ public class AnalitzarController implements Initializable {
 	    	    	else lfirst = false;
 	    	    }
 	    	} catch (Exception e) {
-	        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	        } finally {
 	    	    it.close();
 	    	}
 	    } catch (Exception e) {
-	    	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	    }
 		return Plantilla;
 	}
 	
     public void GetDadesPECs(File folder, File pecs, ArrayList<Pregunta> Plantilla) {
-    	// loop per les PECs (arxius PDF) de la carpeta PDFs
+    	// loop through the PDF files of the PDFs folder
     	Collection<File> pdfs = FileUtils.listFiles(pecs, new WildcardFileFilter(C_PDF), null);
         List<String> lines = new ArrayList<>();
+        Boolean lfirst = true;
         for (File f : pdfs) {
             if (f.isFile()) {
                 String n = f.getName();
                 String dni = n.substring(n.lastIndexOf("_")+1);
                 dni = dni.substring(0,dni.indexOf("."));
                 
-                // obrir la PEC
+                if (lfirst) {
+                	lfirst = false;
+                	// get curso and pec name data
+                	String curso = n.substring(n.indexOf("_")+1,n.lastIndexOf("_"));
+                	String pec = n.substring(0,n.indexOf("_")).replace("PEC", "");
+                	if (pec.isEmpty()) pec = "1";
+                	int year = LocalDateTime.now().getYear();
+                	int month = LocalDateTime.now().getMonthValue();
+               		String anc = (month>=10 ? String.valueOf(year)+"-"+String.valueOf(year+1-2000) : 
+               			String.valueOf(year-1)+"-"+String.valueOf(year-2000));
+                    // write anc file
+                	List<String> data = new ArrayList<>();
+                	data.add(curso + ";" + pec + ";" + anc);
+                    try {
+                    	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_ANC), data, Charset.forName("UTF-8"));
+                    } catch (Exception e) {
+                    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+                    }
+                }
+                
+                // open PEC
                 try {
                     PdfReader reader = new PdfReader(f.getAbsolutePath());
                     AcroFields form = reader.getAcroFields();
                     if (form.getFields().size()>0) {
-                        // capçalera amb les dades identificatives
+                        // header with id data
                         String c = dni;
                         try {
                         	String h = form.getField("HONOR");
                         	c = c + (h.equalsIgnoreCase("Yes") ? ",1" : ",0");
                         } catch (Exception e) {
-                        	// no fer res: el camp honor no existeix perquè la PEC és presencial
+                        	// do nothing: the HONOR field is not present (PEC presencial)
                         }
 
-                        // loop obtenint les dades dels camps
+                        // loop to get field data
                         for (Pregunta p : Plantilla) {
                             c = c + ";" + form.getField(p.nom).replace(",", ".");
                         }
                         lines.add(c);
-                    }	                        
+                    }
+                    reader.close();
                 } catch (Exception e) {
-                	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+                	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
                 }
             }
         }
         
-        // escriure l'arxiu dades_pecs.txt
+        // write file
         try {
         	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_PECS), lines, Charset.forName("UTF-8"));
         } catch (Exception e) {
-        	ShowAlert(e.getMessage(),"Error",AlertType.ERROR);
+        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
         }
     }
     
     
     public void SetOpcions(String p) {
     	this.resps.clear();
-    	// obtenir la solució escollida
+    	// get the chosen solucio
     	for (Solucio s: this.sol) {
     		if (s.pregunta.equals(p)) {
     			if (!s.esLliure ) {
-	    			// carregar les opcions
+	    			// load opcions
 	    			for (Opcio o: s.opcions) {
 	    				this.resps.add(new OpcioSol(o, this.respostes));
 	    			}
@@ -611,11 +670,11 @@ public class AnalitzarController implements Initializable {
     public Boolean CheckDir() {
     	Boolean lreturn = false;
     	if (dir.getText().isEmpty()) {
-    		ShowAlert("Indicar la carpeta de treball","Error",AlertType.ERROR);
+    		ShowAlert(C_INDICAR_CARPETA,C_ERROR,AlertType.ERROR);
     	} else {
     		File folder = new File(dir.getText());
     		lreturn = folder.exists(); 
-    		if (!lreturn) ShowAlert("La carpeta de treball no existeix","Error",AlertType.ERROR);
+    		if (!lreturn) ShowAlert(C_CARPETA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
     	}
     	return lreturn;
     }

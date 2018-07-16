@@ -13,6 +13,11 @@ public class OpcioSol {
 	private Boolean correcte;
 	public Boolean solucio;
 	
+	private final String C_ATENCIO = "Atenció";
+	private final String C_UNA_CORRECTA = "Hi ha d'haver almenys una opció correcta";
+	private final String C_SOLUCIO_CORRECTA = "La opció solució ha de ser també la correcta";
+	private final String C_UNA_SOLUCIO = "Hi ha d'haver almenys una opció solució";
+	
 	public Opcio op;
 	private TableView<OpcioSol> respostes;
 	
@@ -48,7 +53,7 @@ public class OpcioSol {
     }
 
     public void setCorrecte(Boolean l) {
-    	// controlar que hi ha almenys una opció correcta, i que la solució és correcta
+    	// check for at least one correcte & solucio option
 		Boolean last = true;
 		Boolean solucio = false;
     	for (OpcioSol o : this.respostes.getItems()) {
@@ -60,10 +65,10 @@ public class OpcioSol {
     	}
     	
     	if (last && !l) {
-    		ShowAlert("Hi ha d'haver almenys una opció correcta","Atenció",AlertType.WARNING);
+    		ShowAlert(C_UNA_CORRECTA,C_ATENCIO,AlertType.WARNING);
     		this.respostes.refresh();
     	} else if (solucio && !l) {
-    		ShowAlert("La opció solució ha de ser també la correcta","Atenció",AlertType.WARNING);
+    		ShowAlert(C_SOLUCIO_CORRECTA,C_ATENCIO,AlertType.WARNING);
     		this.respostes.refresh();
     	} else {
     		this.op.correcte = l;
@@ -78,7 +83,7 @@ public class OpcioSol {
     public void setSolucio(Boolean l) {
     	
     	if (this.solucio && !l) {
-    		ShowAlert("Hi ha d'haver almenys una opció solució","Atenció",AlertType.WARNING);
+    		ShowAlert(C_UNA_SOLUCIO,C_ATENCIO,AlertType.WARNING);
     		this.respostes.refresh();
     	} else {
         	for (OpcioSol o : this.respostes.getItems()) {

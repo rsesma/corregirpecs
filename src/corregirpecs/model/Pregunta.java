@@ -35,7 +35,7 @@ public class Pregunta {
     
     public void SetSolucio(Solucio s) {
     	this.anulada = s.anulada;    	
-    	// afegir les opcions correctes i posar primer la solució
+    	// add opcions correctes & put the solucio first
     	for (Opcio o: s.opcions) {
     		if (o.correcte) this.correctes.add(o);
     	}

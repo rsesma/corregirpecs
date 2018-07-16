@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="600.0" prefWidth="397.0" xmlns="http://javafx.com/javafx/9" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.NotesController">
+<AnchorPane prefHeight="600.0" prefWidth="351.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.NotesController">
    <children>
       <TableView fx:id="notas" layoutX="21.0" layoutY="14.0" prefHeight="570.0" prefWidth="225.0">
         <columns>
@@ -12,5 +16,28 @@
           <TableColumn fx:id="notaCol" editable="false" prefWidth="70.0" sortable="false" text="Nota" />
         </columns>
       </TableView>
+      <Label layoutX="260.0" layoutY="15.0" text="Any">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <TextField fx:id="any" layoutX="260.0" layoutY="40.0" prefHeight="25.0" prefWidth="74.0" />
+      <Label layoutX="260.0" layoutY="75.0" text="Curs">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <TextField fx:id="curs" layoutX="259.0" layoutY="100.0" prefHeight="25.0" prefWidth="74.0" />
+      <Label layoutX="260.0" layoutY="135.0" text="PEC">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Label>
+      <TextField fx:id="pec" layoutX="260.0" layoutY="160.0" prefHeight="25.0" prefWidth="74.0" />
+      <Button layoutX="260.0" layoutY="212.0" mnemonicParsing="false" onAction="#pbExportar" prefHeight="25.0" prefWidth="74.0" text="Exportar">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Button>
    </children>
 </AnchorPane>

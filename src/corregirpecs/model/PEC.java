@@ -11,12 +11,12 @@ public class PEC {
     public PEC(ArrayList<Pregunta> plantilla, String c) {
     	String[] d = c.split(";",-1);
 
-    	// dni de l'alumne & honor: primer token
+    	// dni & honor: first token
     	String[] t = d[0].split(",");
     	this.dni = t[0];
     	if (t.length>1) this.honor = (t[1].equals("1"));
 
-    	// loop per les respostes
+    	// respostes loop
     	Integer iConta = 1;
     	for (Pregunta p : plantilla) {
     		this.resp.add(new Resposta(p,d[iConta]));
