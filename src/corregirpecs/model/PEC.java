@@ -3,6 +3,9 @@ package corregirpecs.model;
 import java.util.ArrayList;
 
 public class PEC {
+	public String ape1;
+	public String ape2;
+	public String nom;
     public String dni;
     public Boolean honor;
     public ArrayList<Resposta> resp = new ArrayList<Resposta>();
@@ -11,10 +14,13 @@ public class PEC {
     public PEC(ArrayList<Pregunta> plantilla, String c) {
     	String[] d = c.split(";",-1);
 
-    	// dni & honor: first token
-    	String[] t = d[0].split(",");
-    	this.dni = t[0];
-    	if (t.length>1) this.honor = (t[1].equals("1"));
+    	// first token is header: ape1, ape2, nom, dni [, honor]
+    	String[] t = d[0].split("\t");
+    	this.ape1 = t[0];
+    	this.ape2 = t[1];
+    	this.nom = t[2];
+    	this.dni = t[3];
+    	if (t.length>3) this.honor = (t[4].equals("1"));
 
     	// respostes loop
     	Integer iConta = 1;

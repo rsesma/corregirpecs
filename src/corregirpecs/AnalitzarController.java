@@ -63,9 +63,9 @@ import javafx.util.Callback;
 public class AnalitzarController implements Initializable {
     
     //private final String C_DEFDIR = System.getProperty("user.home");
-    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
     //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
     private final Boolean L_TEST = true;
 
 	
@@ -308,7 +308,7 @@ public class AnalitzarController implements Initializable {
 	                    stage.setScene(new Scene(r));
 	                    stage.setTitle("Notes");
 	                    NotesController notes = fxml.<NotesController>getController();
-	                    notes.SetData(PECs,anc,this.dir.getText());
+	                    notes.SetData(PECs,Solucio,anc,this.dir.getText());
 	                    stage.showAndWait();
 	                } catch(Exception e) {
 	                    System.out.println(e.getMessage());
@@ -611,10 +611,11 @@ public class AnalitzarController implements Initializable {
                     AcroFields form = reader.getAcroFields();
                     if (form.getFields().size()>0) {
                         // header with id data
-                        String c = dni;
+                        String c = form.getField("APE1") + "\t" + form.getField("APE2") + "\t" + 
+                                form.getField("NOMBRE") + "\t" + dni;
                         try {
                         	String h = form.getField("HONOR");
-                        	c = c + (h.equalsIgnoreCase("Yes") ? ",1" : ",0");
+                        	c = c + "\t" + (h.equalsIgnoreCase("Yes") ? "1" : "0");
                         } catch (Exception e) {
                         	// do nothing: the HONOR field is not present (PEC presencial)
                         }

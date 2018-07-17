@@ -2,14 +2,17 @@ package corregirpecs;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
-import org.apache.commons.io.FileUtils;
-
 import corregirpecs.model.Nota;
 import corregirpecs.model.PEC;
+import corregirpecs.model.Pregunta;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -39,11 +42,14 @@ public class NotesController implements Initializable {
     private TextField pec;
 
     private String dir;
+    private ArrayList<PEC> PECs;
+    private ArrayList<Pregunta> Solucio;
     
     final ObservableList<Nota> data = FXCollections.observableArrayList();
-    
-    private final String C_SOL = "solucio.txt";
-    private final String C_PLANTILLA = "plantilla.txt";
+
+    private final String C_SEP = ",";
+    private final String C_DELIM = "'";
+    private final String C_SOLUCIO = "solucio.txt";
     
     private final String C_ERROR = "Error";
     private final String C_CONFIRM = "Confirmació";
@@ -76,21 +82,30 @@ public class NotesController implements Initializable {
 		if (result.get() == buttonYes){
 		    String pref = this.any.getText() + "_" + this.curs.getText() + "_PEC" + this.pec.getText();
 		    
-		    // copiar l'arxiu solucio.txt com la plantilla
-        	try {
-        		FileUtils.copyFile(new File(this.dir + File.separator + C_SOL), new File(this.dir + File.separator + pref + "_" + C_PLANTILLA));
-        	} catch (Exception e) {
-            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-        	}
-        	
+	        // SOLUCIO
+		    List<String> s = new ArrayList<>();
+	        s.add("id,eti,tipres,rescor,val,numopc");
+	        for (Pregunta p : this.Solucio) {
+	        	s.add(String.valueOf(p.num) + C_SEP + 
+	        		C_DELIM + p.nom + C_DELIM);
+	        }
+	        // write file solucio.txt
+	        try {
+	        	Files.write(Paths.get(this.dir + File.separator + pref + "_" + C_SOLUCIO), s, Charset.forName("UTF-8"));
+	        } catch (Exception e) {
+	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+	        }
+
         	ShowAlert(C_ARXIUS_EXPORTATS,C_FINAL,AlertType.INFORMATION);
 		}
 	}
 	
-    public void SetData(ArrayList<PEC> PECs, String anc, String dir) {
+    public void SetData(ArrayList<PEC> PECs, ArrayList<Pregunta> Solucio, String anc, String dir) {
         this.dir = dir;
+        this.PECs = PECs;
+        this.Solucio = Solucio;
     	
-    	for (PEC p: PECs) {
+    	for (PEC p: this.PECs) {
         	this.data.add(new Nota(p.dni,p.nota));
         }
         
