@@ -21,6 +21,7 @@ public class PEC {
     	this.nom = t[2];
     	this.dni = t[3];
     	if (t.length>3) this.honor = (t[4].equals("1"));
+    	else this.honor = null;
 
     	// respostes loop
     	Integer iConta = 1;

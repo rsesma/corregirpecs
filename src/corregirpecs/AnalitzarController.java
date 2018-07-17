@@ -63,10 +63,10 @@ import javafx.util.Callback;
 public class AnalitzarController implements Initializable {
     
     //private final String C_DEFDIR = System.getProperty("user.home");
-    private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
     //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
-    private final Boolean L_TEST = true;
+    private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
+    private final Boolean L_TEST = false;
 
 	
     @FXML

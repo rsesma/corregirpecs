@@ -14,7 +14,7 @@ public class Pregunta {
 
     public enum Tipo {
         NUMERICA, TEST, LLIURE
-    }
+    }    
     
     public Pregunta(String c) {    	
     	String[] d = c.split(",");
@@ -40,5 +40,17 @@ public class Pregunta {
     		if (o.correcte) this.correctes.add(o);
     	}
     	Collections.sort(this.correctes, (o1, o2) -> o2.solucio.compareTo(o1.solucio));
+    }
+    
+    public String getSolucions() {
+    	String c = "";
+    	Boolean first = true;
+    	if (!this.anulada && !this.tipo.equals(Tipo.LLIURE)) {
+	    	for (Opcio o: this.correctes) {
+	    		c = c + (!first ? "|" : "") + o.value;
+	    		first = false;
+	    	}
+    	}
+    	return c;
     }
 }
