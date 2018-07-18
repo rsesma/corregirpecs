@@ -52,9 +52,12 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -67,7 +70,7 @@ public class AnalitzarController implements Initializable {
     //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
     //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
     //private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
-    private final Boolean L_TEST = false;
+    private final Boolean L_TEST = false ;
 
 	
     @FXML
@@ -91,30 +94,30 @@ public class AnalitzarController implements Initializable {
     @FXML
     private TableColumn<OpcioSol, Boolean> solCol;    
 
-    private ArrayList<Solucio> sol;
-    
-    private ArrayList<Pregunta> Plantilla;
+    private ArrayList<Solucio> sol = null;
+    private ArrayList<Pregunta> Plantilla = null;
+    private ArrayList<PEC> PECs = null;
     
     final ObservableList<PreguntaSol> pregs= FXCollections.observableArrayList();
     final ObservableList<OpcioSol> resps= FXCollections.observableArrayList();
     
     private final String C_ANALISI = "analisi.txt";
-    private final String C_SOL = "solucio.txt";
     private final String C_DADES_PECS = "dades_pecs.txt";
     private final String C_DADES_ANC = "dades_anc.txt";
-    private final String C_ZIP = "*.zip";
+    private final String C_COMENTARIS_TXT = "comentaris.txt";
     private final String C_PDF = "*.pdf";
-    private final String C_PDFS = "PDFs";
     private final String C_PROBLEMES = "problemes";
+    
+    private final String C_HI_HA_COMENTARIS = "Hi ha comentaris";
+    private final String C_COMENTARIS_GRABATS = "Els comentaris s'han grabat a l'arxiu " + C_COMENTARIS_TXT;
     
     private final String C_ERROR = "Error";
     private final String C_ATENCIO = "Atenció";
+    private final String C_INFORMACIO = "Informació";
+    private final String C_COMENTARIS = "Comentaris";
     private final String C_SELECCIONAR_CARPETA = "Seleccionar carpeta amb les PECs";
     private final String C_SELECCIONAR_PLANTILLA = "Seleccionar la plantilla de la solució";
     private final String C_PLANTILLA_NO_EXISTEIX = "L'arxiu de plantilla no existeix";
-    private final String C_NO_ES_TROBA_SOL = "No es troba l'arxiu " + C_SOL;
-    private final String C_NO_ES_TROBA_ZIP = "No es troba l'arxiu comprimit";
-    private final String C_MASSA_ZIPS = "Hi ha més d'un arxiu comprimit";
     private final String C_HI_HA_PROBLEMES = "Hi ha PECs amb problemes.\n\nVeure la carpeta problemes";
     private final String C_FINAL = "Procés finalitzat";
     private final String C_INDICAR_CARPETA = "Indicar la carpeta de les PECs";
@@ -157,7 +160,7 @@ public class AnalitzarController implements Initializable {
         // pregunta change: refresh repostes table
         this.preguntas.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-            	//this.SetOpcions(newSelection.getNom());
+            	this.SetOpcions(newSelection.getNom());
             }
         });
 
@@ -227,7 +230,7 @@ public class AnalitzarController implements Initializable {
     }
 
     @FXML
-    void getArxiuPlantilla(ActionEvent event) {
+    private void getArxiuPlantilla(ActionEvent event) {
         final FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle(C_SELECCIONAR_PLANTILLA);
         fileChooser.setInitialDirectory(new File(C_DEFDIR));
@@ -235,32 +238,43 @@ public class AnalitzarController implements Initializable {
         if (file != null) {
         	this.plantillaFile.setText(file.getAbsolutePath());
         	this.GetPlantilla();
-        } else {
-        	this.plantillaFile.setText("");
-        }
+        } else this.plantillaFile.setText("");
     }
 
     @FXML
-    void getDirPECs(ActionEvent event) {
-    	if (this.Plantilla != null ) {
-	        final DirectoryChooser directoryChooser = new DirectoryChooser();
-	        directoryChooser.setTitle(C_SELECCIONAR_CARPETA);
-	        directoryChooser.setInitialDirectory(new File(C_DEFDIR));
-	        File folder = directoryChooser.showDialog(null);
-	        if (folder != null) {
-	        	pecsDir.setText(folder.getAbsolutePath());
-	        	this.pregs.clear();
-	        	this.resps.clear();
-	/*        	Collection<File> files = FileUtils.listFiles(new File(pecs.getText()), new WildcardFileFilter(C_ANALISI), null);
-	        	if (!files.isEmpty() && files.size() == 1) {
-	        		this.CarregaAnalisi(files.iterator().next());
-	        	}*/
-	        }
-    	} else ShowAlert(C_SELECCIONAR_PLANTILLA,C_ERROR,AlertType.ERROR);
+    private void getDirPECs(ActionEvent event) {
+        final DirectoryChooser directoryChooser = new DirectoryChooser();
+        directoryChooser.setTitle(C_SELECCIONAR_CARPETA);
+        directoryChooser.setInitialDirectory(new File(C_DEFDIR));
+        File folder = directoryChooser.showDialog(null);
+        if (folder != null) {
+        	this.pecsDir.setText(folder.getAbsolutePath());
+        	this.CheckPECs();
+        	this.pregs.clear();
+        	this.resps.clear();
+        	Collection<File> files = FileUtils.listFiles(new File(this.pecsDir.getText()), new WildcardFileFilter(C_ANALISI), null);
+        	if (!files.isEmpty()) this.CarregaAnalisi(files.iterator().next());
+        }
+    }
+    
+    @FXML
+    private void pbExtreure(ActionEvent event) {
+    	this.CheckPECs();
+    	if (this.Plantilla==null) this.GetPlantilla();
+    	this.GetPECs();
+    	
+    	// if there's no analysis, get default
+    	Collection<File> files = FileUtils.listFiles(new File(this.pecsDir.getText()), new WildcardFileFilter(C_ANALISI), null);
+    	if (files.isEmpty()) this.DefAnalisi();
+    }
+    
+    @FXML
+    private void pbTancar(ActionEvent event) {
+        Stage stage = (Stage) this.plantillaFile.getScene().getWindow();
+        stage.close();
     }
 
 	public void GetPlantilla() {
-		this.Plantilla = null;
 		if (!this.plantillaFile.getText().isEmpty()) {
 			File f = new File(this.plantillaFile.getText());
 			if (f.exists()) {
@@ -283,6 +297,256 @@ public class AnalitzarController implements Initializable {
 			} else ShowAlert(C_PLANTILLA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
 		} else ShowAlert(C_SELECCIONAR_PLANTILLA,C_ERROR,AlertType.ERROR);
 	}
+	
+	public void CheckPECs() {
+		if (this.CheckDir()) {
+	        Boolean lproblems = false;
+	        File folder = new File(this.pecsDir.getText());		// folder for problem files
+	        File problems = new File(this.pecsDir.getText(),C_PROBLEMES);		// folder for problem files
+	    	try {
+		        for (File f : folder.listFiles()) {
+					// loop for not hidden files
+			        if (f.isFile() && !f.isHidden() && !f.getName().equalsIgnoreCase(C_DADES_PECS)
+			        	&& !f.getName().equalsIgnoreCase(C_COMENTARIS_TXT)
+			        	&& !f.getName().equalsIgnoreCase(C_ANALISI)) {
+			        	// PDF?
+			        	String ext = FilenameUtils.getExtension(f.getName());
+			        	if (ext.equalsIgnoreCase("pdf")) {
+			                PdfReader reader = new PdfReader(f.getAbsolutePath());
+			                AcroFields form = reader.getAcroFields();
+			                int nsize = form.getFields().size();
+			                reader.close();
+			                // fields?
+			                if (nsize==0) {
+			                	FileUtils.moveFileToDirectory(f, problems, true);
+			                	lproblems = true;
+			                }
+			        	} else {
+			        		FileUtils.moveFileToDirectory(f, problems, true);
+			        		lproblems = true;
+			        	}
+			        }
+			    }
+				
+				if (lproblems) ShowAlert(C_HI_HA_PROBLEMES,C_ATENCIO,AlertType.WARNING);
+	    	} catch (Exception e) {
+		    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+		    }
+
+		}
+	}
+	
+    public void GetPECs() {
+    	// get data from PDF files and build PECs arraylist
+    	this.PECs = new ArrayList<PEC>();
+    	File folder = new File(this.pecsDir.getText());
+        List<String> lines = new ArrayList<>();
+        Boolean lcomments = false;
+        List<String> comments = new ArrayList<>();
+
+        // loop through the PDF files of the PECs folder
+    	Collection<File> pdfs = FileUtils.listFiles(folder, new WildcardFileFilter(C_PDF), null);
+        try {
+	        for (File f : pdfs) {
+	            if (f.isFile()) {
+	                String n = f.getName();
+	                String dni = n.substring(n.lastIndexOf("_")+1);
+	                dni = dni.substring(0,dni.indexOf("."));
+	                // open PEC
+                    PdfReader reader = new PdfReader(f.getAbsolutePath());
+                    AcroFields form = reader.getAcroFields();
+                    if (form.getFields().size()>0) {
+                        // header with id data
+                        String c = form.getField("APE1") + "\t" + form.getField("APE2") + "\t" + 
+                                form.getField("NOMBRE") + "\t" + dni;
+                        try {
+                        	c = c + "\t" + (form.getField("HONOR").equalsIgnoreCase("Yes") ? "1" : "0");
+                        } catch (Exception e) {
+                        	// do nothing: the HONOR field is not present (PEC presencial)
+                        }
+                        
+                        // build COMMENTS section
+                        if (!form.getField("COMENT").isEmpty()) {
+                            lcomments = true;
+                            comments.add(dni + ": " + form.getField("COMENT"));
+                        }
+
+                        // loop to get field data
+                        for (Pregunta p : Plantilla) {
+                            c = c + ";" + form.getField(p.nom).replace(",", ".");
+                        }
+                        lines.add(c);
+                        
+                        this.PECs.add(new PEC(this.Plantilla, c));		// add PEC to arraylist
+                    }
+                    reader.close();
+	            }
+	        }
+	        // write file with PEC data	        
+	        Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_PECS), lines, Charset.forName("UTF-8"));
+
+	        if (lcomments) {
+	        	// write file with PEC data	        
+		        Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_COMENTARIS_TXT), comments, Charset.forName("UTF-8"));
+		        
+		        // show expandable dialog with comments
+		        Alert alert = new Alert(AlertType.INFORMATION);
+		        alert.setTitle(C_COMENTARIS);
+		        alert.setHeaderText(C_HI_HA_COMENTARIS);
+		        alert.setContentText(C_COMENTARIS_GRABATS);
+	
+		        String txt = "";
+		        for (String c : comments) {
+		        	txt = txt + c + "\n\n";
+		        }
+		        
+		        TextArea textArea = new TextArea(txt);
+		        textArea.setEditable(false);
+		        textArea.setWrapText(true);
+	
+		        textArea.setMaxWidth(Double.MAX_VALUE);
+		        textArea.setMaxHeight(Double.MAX_VALUE);
+		        GridPane.setVgrow(textArea, Priority.ALWAYS);
+		        GridPane.setHgrow(textArea, Priority.ALWAYS);
+		        
+		        GridPane content = new GridPane();
+		        content.setMaxWidth(Double.MAX_VALUE);
+		        content.add(textArea, 0, 0);
+	
+		        // set expandable Exception into the dialog pane
+		        alert.getDialogPane().setExpandableContent(content);
+		        alert.showAndWait();
+	        } else ShowAlert(C_FINAL,C_INFORMACIO,AlertType.INFORMATION);
+        } catch (Exception e) {
+        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+        }
+    }
+
+    public void DefAnalisi() {
+    	// default analysis: most frequent answer is correcte & solucio
+    	// respostes statistic for each pregunta no lliure (numèriques or tipus test)
+    	Stat st = new Stat(this.Plantilla);
+    	for (PEC p : PECs) {
+    		for (Resposta r: p.resp) {
+    			if (r.pregunta.tipo != Tipo.LLIURE) st.getItem(r.pregunta.nom).Add(r.resposta);
+    		}
+    	}
+    	// get all possibles solucions sort in descendant order of % 
+    	this.sol = new ArrayList<Solucio>();
+    	for (Item i: st.items) {
+    		this.sol.add(new Solucio(i,PECs.size()));
+    	}
+    	// default: the most frequent (% - the 1st) option is correcte & solucio
+    	for (Solucio s: this.sol) {
+    		if (!s.esLliure) {
+            	Opcio o = s.opcions.get(0);
+            	o.correcte = true;
+            	o.solucio = true;
+    		}
+    	}
+		        	
+    	this.Graba(false);		// save to file
+		        	
+    	// load table views
+    	this.SetPreguntes();
+    }
+    
+    public void Graba(Boolean alert) {
+		NumberFormat formatter = new DecimalFormat("##0.000");
+    	if (this.CheckDir()) {
+            List<String> lines = new ArrayList<>();
+            for (Solucio s : this.sol) {
+            	String c = s.pregunta + ";" + (s.anulada ? "1" : "0") + ";";
+            	if (!s.esLliure) {
+	            	Boolean lfirst = true;
+	            	for (Opcio o : s.opcions) {
+	            		c = c + (lfirst ? "" : ",") + o.value + "\t" + formatter.format(o.pct).replace(",", ".");
+	            		c = c + "\t" + (o.correcte ? "1" : "0") + "\t" + (o.solucio ? "1" : "0");
+	            		lfirst = false;
+	            	}
+            	} else {
+            		c = c + "0";
+            	}
+            	
+            	lines.add(c);
+            }
+            
+            // write file
+            try {
+            	Files.write(Paths.get(this.pecsDir.getText() + File.separator + C_ANALISI), lines, Charset.forName("UTF-8"));
+            	if (alert) ShowAlert(C_GRABACIO_COMPLETADA,"",AlertType.INFORMATION);
+            } catch (Exception e) {
+            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+            }
+    	}
+    }
+    
+    public void CarregaAnalisi(File f) {
+    	this.sol = new ArrayList<Solucio>();
+		try {
+			LineIterator it = FileUtils.lineIterator(f, "UTF-8");
+	    	try {
+	    	    while (it.hasNext()) {
+	    	    	String line = it.nextLine();
+	    	    	String[] fields = line.split(";");
+	    	    	Solucio s = new Solucio(null,0);
+	    	    	s.pregunta = fields[0];
+	    	    	s.anulada = (fields[1].equals("1"));
+	    	    	s.esLliure = (fields[2].equals("0"));
+	    	    	if (!s.esLliure) {
+		    	    	String[] opcions = fields[2].split(",",-1);
+		    	    	for (String op: opcions) {
+		    	    		String [] v = op.split("\t",-1);
+		    	    		Opcio o = new Opcio("",0,0);
+		    	    		o.value = v[0];
+		    	    		o.pct = Double.parseDouble(v[1]);
+		    	    		o.correcte = (v[2].equals("1"));
+		    	    		o.solucio = (v[3].equals("1"));
+		    	    		s.opcions.add(o);
+		    	    	}
+	    	    	}
+	    	    	this.sol.add(s);
+	    	    }
+	    	    
+	    	    this.SetPreguntes();
+	    	    this.SetOpcions(this.sol.get(0).pregunta);
+	    	} catch (Exception e) {
+	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+	        } finally {
+	    	    it.close();
+	    	}
+	    } catch (Exception e) {
+	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+	    }
+    }
+
+    
+    public void SetOpcions(String p) {
+    	this.resps.clear();
+    	// get the chosen solucio
+    	for (Solucio s: this.sol) {
+    		if (s.pregunta.equals(p)) {
+    			if (!s.esLliure ) {
+	    			// load opcions
+	    			for (Opcio o: s.opcions) {
+	    				this.resps.add(new OpcioSol(o, this.respostes));
+	    			}
+    			}
+    		}
+    	}
+    }
+    
+    public void SetPreguntes() {
+        for (Solucio s: this.sol) {
+        	PreguntaSol p = new PreguntaSol(s);
+             this.pregs.add(p);
+        }
+        
+        this.preguntas.requestFocus();
+        this.preguntas.getSelectionModel().select(0);
+        this.preguntas.getFocusModel().focus(0);
+    }
+
 
 /*
     @FXML
@@ -379,35 +643,6 @@ public class AnalitzarController implements Initializable {
 
         return Solucio;
     }
-
-    public ArrayList<PEC> GetPECs(ArrayList<Pregunta> Solucio) {
-        // PECS: respostes of the alumnes PECs
-    	ArrayList<PEC> PECs = new ArrayList<PEC>();
-    	
-    	File folder = new File(dir.getText());
-        // DADES: unzip and create PDFs folder (if not exists)
-    	Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_DADES_PECS), null);
-        if (files.isEmpty()) GetDadesPECs(folder, new File(dir.getText(),C_PDFS), Solucio);
-
-    	try {
-    		// get data, line by line
-    		LineIterator it = FileUtils.lineIterator(new File(folder.getAbsolutePath() + File.separator + C_DADES_PECS), "UTF-8");
-        	try {
-        	    while (it.hasNext()) {
-        	    	String line = it.nextLine();
-        	    	PECs.add(new PEC(Solucio, line));
-        	    }
-        	} catch (Exception e) {
-            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-            } finally {
-        	    it.close();
-        	}
-    	} catch (Exception e) {
-        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-        }
-    	
-        return PECs;
-    }
     
     public boolean Descomprimir() {
 		Boolean lreturn = false;
@@ -492,74 +727,6 @@ public class AnalitzarController implements Initializable {
     	
     	return lreturn;
 	}
-    
-    public void Analitzar() {
-    	if (this.CheckDir()) {
-    		ArrayList<Pregunta> Solucio = this.GetSolucio();
-    		if (Solucio.size()>0) {
-    			ArrayList<PEC> PECs = this.GetPECs(Solucio);
-    			
-    			if (PECs.size()>0) {
-		        	// respostes statistic for each pregunta no lliure (numèriques or tipus test)
-		        	Stat st = new Stat(Solucio);
-		        	for (PEC p : PECs) {
-		        		for (Resposta r: p.resp) {
-		        			if (r.pregunta.tipo != Tipo.LLIURE) st.getItem(r.pregunta.nom).Add(r.resposta);
-		        		}
-		        	}
-		            	
-		        	// get all possibles solucions sort in descendant order of % 
-		        	this.sol = new ArrayList<Solucio>();
-		        	for (Item i: st.items) {
-		        		this.sol.add(new Solucio(i,PECs.size()));
-		        	}
-		        	// default: the most frequent (% - the 1st) option is correcte & solucio
-		        	for (Solucio s: this.sol) {
-		        		if (!s.esLliure) {
-			            	Opcio o = s.opcions.get(0);
-			            	o.correcte = true;
-			            	o.solucio = true;
-		        		}
-		        	}
-		        	
-		        	this.Graba();		// save to file
-		        	
-		        	// load table views
-		        	this.SetPreguntes();
-    			}
-    		}
-    	}
-    }
-    
-    public void Graba() {
-		NumberFormat formatter = new DecimalFormat("##0.000");
-    	if (this.CheckDir()) {
-            List<String> lines = new ArrayList<>();
-            for (Solucio s : this.sol) {
-            	String c = s.pregunta + ";" + (s.anulada ? "1" : "0") + ";";
-            	if (!s.esLliure) {
-	            	Boolean lfirst = true;
-	            	for (Opcio o : s.opcions) {
-	            		c = c + (lfirst ? "" : ",") + o.value + "\t" + formatter.format(o.pct).replace(",", ".");
-	            		c = c + "\t" + (o.correcte ? "1" : "0") + "\t" + (o.solucio ? "1" : "0");
-	            		lfirst = false;
-	            	}
-            	} else {
-            		c = c + "0";
-            	}
-            	
-            	lines.add(c);
-            }
-            
-            // write file
-            try {
-            	Files.write(Paths.get(dir.getText() + File.separator + C_ANALISI), lines, Charset.forName("UTF-8"));
-            	ShowAlert(C_GRABACIO_COMPLETADA,"",AlertType.INFORMATION);
-            } catch (Exception e) {
-            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-            }
-    	}
-    }
     
     public void CarregaAnalisi(File f) {
     	this.sol = new ArrayList<Solucio>();
@@ -690,31 +857,6 @@ public class AnalitzarController implements Initializable {
     }
     
     
-    public void SetOpcions(String p) {
-    	this.resps.clear();
-    	// get the chosen solucio
-    	for (Solucio s: this.sol) {
-    		if (s.pregunta.equals(p)) {
-    			if (!s.esLliure ) {
-	    			// load opcions
-	    			for (Opcio o: s.opcions) {
-	    				this.resps.add(new OpcioSol(o, this.respostes));
-	    			}
-    			}
-    		}
-    	}
-    }
-    
-    public void SetPreguntes() {
-        for (Solucio s: this.sol) {
-        	PreguntaSol p = new PreguntaSol(s);
-             this.pregs.add(p);
-        }
-        
-        this.preguntas.requestFocus();
-        this.preguntas.getSelectionModel().select(0);
-        this.preguntas.getFocusModel().focus(0);
-    }
 */    
     public Boolean CheckDir() {
     	Boolean lreturn = false;
