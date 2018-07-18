@@ -56,22 +56,24 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
 
 public class AnalitzarController implements Initializable {
     
-    //private final String C_DEFDIR = System.getProperty("user.home");
+    private final String C_DEFDIR = System.getProperty("user.home");
     //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
     //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
-    private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
+    //private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
     private final Boolean L_TEST = false;
 
 	
     @FXML
-    private TextField dir;
-
+    private TextField plantillaFile;
+    @FXML
+    private TextField pecsDir;
 	@FXML
     private TableView<PreguntaSol> preguntas;
     @FXML
@@ -91,6 +93,8 @@ public class AnalitzarController implements Initializable {
 
     private ArrayList<Solucio> sol;
     
+    private ArrayList<Pregunta> Plantilla;
+    
     final ObservableList<PreguntaSol> pregs= FXCollections.observableArrayList();
     final ObservableList<OpcioSol> resps= FXCollections.observableArrayList();
     
@@ -105,14 +109,16 @@ public class AnalitzarController implements Initializable {
     
     private final String C_ERROR = "Error";
     private final String C_ATENCIO = "Atenció";
-    private final String C_SELECCIONAR_CARPETA = "Seleccionar carpeta de treball";
+    private final String C_SELECCIONAR_CARPETA = "Seleccionar carpeta amb les PECs";
+    private final String C_SELECCIONAR_PLANTILLA = "Seleccionar la plantilla de la solució";
+    private final String C_PLANTILLA_NO_EXISTEIX = "L'arxiu de plantilla no existeix";
     private final String C_NO_ES_TROBA_SOL = "No es troba l'arxiu " + C_SOL;
     private final String C_NO_ES_TROBA_ZIP = "No es troba l'arxiu comprimit";
     private final String C_MASSA_ZIPS = "Hi ha més d'un arxiu comprimit";
     private final String C_HI_HA_PROBLEMES = "Hi ha PECs amb problemes.\n\nVeure la carpeta problemes";
     private final String C_FINAL = "Procés finalitzat";
-    private final String C_INDICAR_CARPETA = "Indicar la carpeta de treball";
-    private final String C_CARPETA_NO_EXISTEIX = "La carpeta de treball no existeix";
+    private final String C_INDICAR_CARPETA = "Indicar la carpeta de les PECs";
+    private final String C_CARPETA_NO_EXISTEIX = "La carpeta amb les PECs no existeix";
     private final String C_GRABACIO_COMPLETADA = "Grabació completada";
     
     
@@ -151,7 +157,7 @@ public class AnalitzarController implements Initializable {
         // pregunta change: refresh repostes table
         this.preguntas.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             if (newSelection != null) {
-            	this.SetOpcions(newSelection.getNom());
+            	//this.SetOpcions(newSelection.getNom());
             }
         });
 
@@ -214,35 +220,77 @@ public class AnalitzarController implements Initializable {
         
         // TEST
         if (L_TEST) {
-	        this.dir.setText(C_DEFDIR);
-	        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
-	        this.CarregaAnalisi(files.iterator().next());
-        }
-    }
-        
-    @FXML
-    void getDir(ActionEvent event) {
-        final DirectoryChooser directoryChooser = new DirectoryChooser();
-        directoryChooser.setTitle(C_SELECCIONAR_CARPETA);
-        directoryChooser.setInitialDirectory(new File(C_DEFDIR));
-        File folder = directoryChooser.showDialog(null);
-        if (folder != null) {
-        	dir.setText(folder.getAbsolutePath());
-        	Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter(C_ANALISI), null);
-        	if (!files.isEmpty() && files.size() == 1) this.CarregaAnalisi(files.iterator().next());
-        	else {
-            	this.pregs.clear();
-            	this.resps.clear();        		
-        	}
-        } else {
-        	dir.setText("");
+//	        this.dir.setText(C_DEFDIR);
+//	        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
+//	        this.CarregaAnalisi(files.iterator().next());
         }
     }
 
     @FXML
-    public void mnuDescAnalitza(ActionEvent event) {
-    	if (this.Descomprimir()) {
-    		this.Analitzar();
+    void getArxiuPlantilla(ActionEvent event) {
+        final FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle(C_SELECCIONAR_PLANTILLA);
+        fileChooser.setInitialDirectory(new File(C_DEFDIR));
+        File file = fileChooser.showOpenDialog(null);
+        if (file != null) {
+        	this.plantillaFile.setText(file.getAbsolutePath());
+        	this.GetPlantilla();
+        } else {
+        	this.plantillaFile.setText("");
+        }
+    }
+
+    @FXML
+    void getDirPECs(ActionEvent event) {
+    	if (this.Plantilla != null ) {
+	        final DirectoryChooser directoryChooser = new DirectoryChooser();
+	        directoryChooser.setTitle(C_SELECCIONAR_CARPETA);
+	        directoryChooser.setInitialDirectory(new File(C_DEFDIR));
+	        File folder = directoryChooser.showDialog(null);
+	        if (folder != null) {
+	        	pecsDir.setText(folder.getAbsolutePath());
+	        	this.pregs.clear();
+	        	this.resps.clear();
+	/*        	Collection<File> files = FileUtils.listFiles(new File(pecs.getText()), new WildcardFileFilter(C_ANALISI), null);
+	        	if (!files.isEmpty() && files.size() == 1) {
+	        		this.CarregaAnalisi(files.iterator().next());
+	        	}*/
+	        }
+    	} else ShowAlert(C_SELECCIONAR_PLANTILLA,C_ERROR,AlertType.ERROR);
+    }
+
+	public void GetPlantilla() {
+		this.Plantilla = null;
+		if (!this.plantillaFile.getText().isEmpty()) {
+			File f = new File(this.plantillaFile.getText());
+			if (f.exists()) {
+				this.Plantilla = new ArrayList<Pregunta>();
+				try {
+					LineIterator it = FileUtils.lineIterator(f, "UTF-8");
+			    	try {
+			    		it.nextLine();		// first line has field names, not useful
+			    	    while (it.hasNext()) {
+			    	    	this.Plantilla.add(new Pregunta(it.nextLine()));
+			    	    }
+			    	} catch (Exception e) {
+			        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+			        } finally {
+			    	    it.close();
+			    	}
+			    } catch (Exception e) {
+			    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+			    }
+			} else ShowAlert(C_PLANTILLA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
+		} else ShowAlert(C_SELECCIONAR_PLANTILLA,C_ERROR,AlertType.ERROR);
+	}
+
+/*
+    @FXML
+    public void mnuExportAnalitza(ActionEvent event) {
+    	if (this.CheckDir()) {
+	    	if (this.Descomprimir()) {
+	    		this.Analitzar();
+	    	}
     	}
     }
     
@@ -667,13 +715,13 @@ public class AnalitzarController implements Initializable {
         this.preguntas.getSelectionModel().select(0);
         this.preguntas.getFocusModel().focus(0);
     }
-    
+*/    
     public Boolean CheckDir() {
     	Boolean lreturn = false;
-    	if (dir.getText().isEmpty()) {
+    	if (this.pecsDir.getText().isEmpty()) {
     		ShowAlert(C_INDICAR_CARPETA,C_ERROR,AlertType.ERROR);
     	} else {
-    		File folder = new File(dir.getText());
+    		File folder = new File(this.pecsDir.getText());
     		lreturn = folder.exists(); 
     		if (!lreturn) ShowAlert(C_CARPETA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
     	}

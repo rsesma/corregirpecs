@@ -66,16 +66,14 @@ public class NotesController implements Initializable {
     private final String C_ARXIUS_EXPORTATS = "Arxius exportats";
     private final String C_FINAL = "Procés finalitzat";
 
-	
-	@Override
     public void initialize(URL url, ResourceBundle rb) {
         this.notas.setEditable(false);
         this.notas.setItems(this.data);
         this.dniCol.setCellValueFactory(new PropertyValueFactory<>("DNI"));
         this.notaCol.setCellValueFactory(new PropertyValueFactory<>("Nota"));
 	}
-	
-	@FXML
+    
+    @FXML
     void pbExportar(ActionEvent event) {
 		Alert alert = new Alert(AlertType.CONFIRMATION);
 		alert.setTitle(C_CONFIRM);
