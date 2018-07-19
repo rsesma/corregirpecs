@@ -1,8 +1,6 @@
 package corregirpecs;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -14,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -31,6 +27,7 @@ import corregirpecs.model.OpcioSol;
 import corregirpecs.model.PEC;
 import corregirpecs.model.Pregunta;
 import corregirpecs.model.Pregunta.Tipo;
+import corregirpecs.model.PreguntaResposta;
 import corregirpecs.model.PreguntaSol;
 import corregirpecs.model.Resposta;
 import corregirpecs.model.Solucio;
@@ -78,32 +75,30 @@ public class AnalitzarController implements Initializable {
     @FXML
     private TextField pecsDir;
 	@FXML
-    private TableView<PreguntaSol> preguntas;
+    private TableView<PreguntaResposta> pregresp;
     @FXML
-    private TableColumn<PreguntaSol, Boolean> anulCol;
+    private TableColumn<PreguntaResposta, Boolean> anulCol;
     @FXML
-    private TableColumn<PreguntaSol, String> nomCol;
+    private TableColumn<PreguntaResposta, String> nomCol;
     @FXML
-    private TableView<OpcioSol> respostes;
+    private TableColumn<PreguntaResposta, String> respCol;
     @FXML
-    private TableColumn<OpcioSol, String> respCol;
+    private TableColumn<PreguntaResposta, String> pctCol;
     @FXML
-    private TableColumn<OpcioSol, String> pctCol;
+    private TableColumn<PreguntaResposta, Boolean> corrCol;
     @FXML
-    private TableColumn<OpcioSol, Boolean> corrCol;
-    @FXML
-    private TableColumn<OpcioSol, Boolean> solCol;    
+    private TableColumn<PreguntaResposta, Boolean> solCol;    
 
     private ArrayList<Solucio> sol = null;
     private ArrayList<Pregunta> Plantilla = null;
     private ArrayList<PEC> PECs = null;
     
-    final ObservableList<PreguntaSol> pregs= FXCollections.observableArrayList();
-    final ObservableList<OpcioSol> resps= FXCollections.observableArrayList();
+    private String savedir = "";
+    
+    final ObservableList<PreguntaResposta> pr= FXCollections.observableArrayList();
     
     private final String C_ANALISI = "analisi.txt";
     private final String C_DADES_PECS = "dades_pecs.txt";
-    private final String C_DADES_ANC = "dades_anc.txt";
     private final String C_COMENTARIS_TXT = "comentaris.txt";
     private final String C_PDF = "*.pdf";
     private final String C_PROBLEMES = "problemes";
@@ -129,98 +124,98 @@ public class AnalitzarController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
         
         // config preguntas table
-        this.preguntas.setEditable(true);
-        this.preguntas.setItems(this.pregs);
-        this.nomCol.setCellValueFactory(new PropertyValueFactory<>("Nom"));        
-        // checkbox anular
-        this.anulCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<PreguntaSol, Boolean>, ObservableValue<Boolean>>() {
-            @Override
-            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<PreguntaSol, Boolean> param) {
-                PreguntaSol p = param.getValue();
-                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getAnulada());
-                // when column change
-                booleanProp.addListener(new ChangeListener<Boolean>() {
-                    @Override
-                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
-                            Boolean newValue) { 
-                        p.setAnulada(newValue);
-                     }
-                });
-                return booleanProp;
-            }
-        });
-        this.anulCol.setCellFactory(new Callback<TableColumn<PreguntaSol, Boolean>, TableCell<PreguntaSol, Boolean>>() {
-            @Override
-            public TableCell<PreguntaSol, Boolean> call(TableColumn<PreguntaSol, Boolean> p) {
-                CheckBoxTableCell<PreguntaSol, Boolean> cell = new CheckBoxTableCell<PreguntaSol, Boolean>();
-                cell.setAlignment(Pos.CENTER);
-                return cell;
-            }
-        });
-        // pregunta change: refresh repostes table
-        this.preguntas.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-            	this.SetOpcions(newSelection.getNom());
-            }
-        });
-
-        // config respostes table
-        this.respostes.setEditable(true);
-        this.respostes.setItems(this.resps);
+        this.pregresp.setEditable(true);
+        this.pregresp.setItems(this.pr);
+        this.nomCol.setCellValueFactory(new PropertyValueFactory<>("Nom"));
         this.respCol.setCellValueFactory(new PropertyValueFactory<>("Valor"));
         this.pctCol.setCellValueFactory(new PropertyValueFactory<>("PCT"));
-        // checkbox correcte
-        this.corrCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<OpcioSol, Boolean>, ObservableValue<Boolean>>() {
+  
+        // checkbox anular
+        this.anulCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<PreguntaResposta, Boolean>, ObservableValue<Boolean>>() {
             @Override
-            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<OpcioSol, Boolean> param) {
-                OpcioSol o = param.getValue();
-                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(o.getCorrecte());
+            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<PreguntaResposta, Boolean> param) {
+                PreguntaResposta p = param.getValue();
+                if (!p.subresposta) {
+	                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getAnulada());
+	                // when column change
+	                booleanProp.addListener(new ChangeListener<Boolean>() {
+	                    @Override
+	                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
+	                            Boolean newValue) { 
+	                        p.setAnulada(newValue);
+	                     }
+	                });
+	                return booleanProp;
+                } else {
+                	return null;
+                }
+            }
+        });
+        this.anulCol.setCellFactory(column -> {
+        	return new CheckBoxTableCell<PreguntaResposta, Boolean>() {
+        		@Override
+				public void updateItem(Boolean item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setAlignment(Pos.CENTER);
+        			if (this.getItem() == null) setVisible(false);
+                }
+        	};
+        });
+
+        // checkbox correcte
+        this.corrCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<PreguntaResposta, Boolean>, ObservableValue<Boolean>>() {
+            @Override
+            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<PreguntaResposta, Boolean> param) {
+            	PreguntaResposta p = param.getValue();
+                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getCorrecte());
                 // when column change
                 booleanProp.addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
                             Boolean newValue) { 
-                        o.setCorrecte(newValue);
+                       p.setCorrecte(newValue);
                     }
                 });
                 return booleanProp;
             }
         });
-        this.corrCol.setCellFactory(new Callback<TableColumn<OpcioSol, Boolean>, TableCell<OpcioSol, Boolean>>() {
-            @Override
-            public TableCell<OpcioSol, Boolean> call(TableColumn<OpcioSol, Boolean> p) {
-                CheckBoxTableCell<OpcioSol, Boolean> cell = new CheckBoxTableCell<OpcioSol, Boolean>();
-                cell.setAlignment(Pos.CENTER);
-                return cell;
-            }
+        this.corrCol.setCellFactory(column -> {
+        	return new CheckBoxTableCell<PreguntaResposta, Boolean>() {
+        		@Override
+				public void updateItem(Boolean item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setAlignment(Pos.CENTER);
+                }
+        	};
         });
 
         // checkbox solucio
-        this.solCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<OpcioSol, Boolean>, ObservableValue<Boolean>>() {
+        this.solCol.setCellValueFactory(new Callback<TableColumn.CellDataFeatures<PreguntaResposta, Boolean>, ObservableValue<Boolean>>() {
             @Override
-            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<OpcioSol, Boolean> param) {
-                OpcioSol o = param.getValue();
-                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(o.getSolucio());
+            public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<PreguntaResposta, Boolean> param) {
+            	PreguntaResposta p = param.getValue();
+                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getSolucio());
                 // when column change
                 booleanProp.addListener(new ChangeListener<Boolean>() {
                     @Override
                     public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
                             Boolean newValue) { 
-                        o.setSolucio(newValue);
+                        p.setSolucio(newValue);
                     }
                 });
                 return booleanProp;
             }
         });
-        this.solCol.setCellFactory(new Callback<TableColumn<OpcioSol, Boolean>, TableCell<OpcioSol, Boolean>>() {
-            @Override
-            public TableCell<OpcioSol, Boolean> call(TableColumn<OpcioSol, Boolean> p) {
-                CheckBoxTableCell<OpcioSol, Boolean> cell = new CheckBoxTableCell<OpcioSol, Boolean>();
-                cell.setAlignment(Pos.CENTER);
-                return cell;
-            }
+        this.solCol.setCellFactory(column -> {
+        	return new CheckBoxTableCell<PreguntaResposta, Boolean>() {
+        		@Override
+				public void updateItem(Boolean item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setAlignment(Pos.CENTER);
+                }
+        	};
         });
-        
+
         // TEST
         if (L_TEST) {
 //	        this.dir.setText(C_DEFDIR);
@@ -249,23 +244,110 @@ public class AnalitzarController implements Initializable {
         File folder = directoryChooser.showDialog(null);
         if (folder != null) {
         	this.pecsDir.setText(folder.getAbsolutePath());
+        	String c = folder.getAbsolutePath();
+        	this.savedir = c.substring(0,c.lastIndexOf(File.separator));
         	this.CheckPECs();
-        	this.pregs.clear();
-        	this.resps.clear();
-        	Collection<File> files = FileUtils.listFiles(new File(this.pecsDir.getText()), new WildcardFileFilter(C_ANALISI), null);
+        	this.pr.clear();
+        	Collection<File> files = FileUtils.listFiles(new File(this.savedir), new WildcardFileFilter(C_ANALISI), null);
         	if (!files.isEmpty()) this.CarregaAnalisi(files.iterator().next());
         }
     }
     
     @FXML
     private void pbExtreure(ActionEvent event) {
-    	this.CheckPECs();
-    	if (this.Plantilla==null) this.GetPlantilla();
-    	this.GetPECs();
+    	if (this.CheckPECs()) {
+    		Boolean lcontinue = false;
+    		if (this.Plantilla==null) lcontinue = this.GetPlantilla();
+    		else lcontinue = true;
+    		if (lcontinue) {
+	        	this.GetPECs();
+	        	// if there's no analysis, get default
+	        	Collection<File> files = FileUtils.listFiles(new File(this.savedir), new WildcardFileFilter(C_ANALISI), null);
+	        	if (files.isEmpty()) this.DefAnalisi();
+	        }
+    	}
+    }
+
+    @FXML
+    private void pbGrabar(ActionEvent event) {
+    	this.Graba(true);
+    }
+
+    @FXML
+    private void pbNotes(ActionEvent event) {
+    	// get computed Notes from the defined solució
+    	Boolean lcontinue = true;
     	
-    	// if there's no analysis, get default
-    	Collection<File> files = FileUtils.listFiles(new File(this.pecsDir.getText()), new WildcardFileFilter(C_ANALISI), null);
-    	if (files.isEmpty()) this.DefAnalisi();
+    	if (this.Plantilla==null) lcontinue = this.GetPlantilla();
+    	if (lcontinue) {
+    		if (this.PECs==null) {
+    			Collection<File> files = FileUtils.listFiles(new File(this.savedir), new WildcardFileFilter(C_DADES_PECS), null);
+	        	if (files.isEmpty()) {
+	        		if (this.CheckPECs()) {
+	        			lcontinue = true;
+	        			this.GetPECs();
+	        		}
+	        	} else {
+	        		this.CarregaPECs(files.iterator().next());
+	        	}
+    		}
+    	}
+
+    	if (lcontinue && this.sol!=null) {
+	    	// load solucions to each plantilla and sum of weights
+			float wsum = 0;
+	    	for (Pregunta p : this.Plantilla) {
+	    		wsum = wsum + p.w;
+	    		for (Solucio s : this.sol) {
+	    			if (s.pregunta.equals(p.nom)) {
+	    				p.SetSolucio(s);
+	    				break;
+	    			}
+	    		}
+	    	}
+		            	
+	    	// compute PEC nota  	
+	    	for (PEC p : PECs) {
+	    		p.CalculaNota(wsum);
+	    	}
+		            	
+			// get curs, any, numpec from the first available PEC
+	    	String anc = "";
+	    	Collection<File> files = FileUtils.listFiles(new File(this.pecsDir.getText()), new WildcardFileFilter(C_PDF), null);
+	        for (File f : files) {
+	            if (f.isFile()) {
+	            	// get curso, pec number & year from PEC name
+	                String n = f.getName();
+	            	String curso = n.substring(n.indexOf("_")+1,n.lastIndexOf("_"));
+	            	String pec = n.substring(0,n.indexOf("_")).replace("PEC", "");
+	            	if (pec.isEmpty()) pec = "1";
+	            	
+	            	int year = LocalDateTime.now().getYear();
+	            	int month = LocalDateTime.now().getMonthValue();
+	           		String any = (month>=10 ? String.valueOf(year)+"-"+String.valueOf(year+1-2000) : 
+	               			String.valueOf(year-1)+"-"+String.valueOf(year-2000));
+	
+	           		anc = curso + ";" + pec + ";" + any;
+	           		
+	           		break;
+	            }
+	        }
+		            	
+	    	// show computed notes
+	        try {
+	            FXMLLoader fxml = new FXMLLoader(getClass().getResource("Notes.fxml"));
+	            Parent r = (Parent) fxml.load();
+	            Stage stage = new Stage();
+	            stage.initModality(Modality.APPLICATION_MODAL);
+	            stage.setScene(new Scene(r));
+	            stage.setTitle("Notes");
+	            NotesController notes = fxml.<NotesController>getController();
+	            notes.SetData(this.PECs,this.Plantilla,anc,this.savedir);
+	            stage.showAndWait();
+	        } catch(Exception e) {
+	            System.out.println(e.getMessage());
+	        }
+    	}
     }
     
     @FXML
@@ -274,7 +356,8 @@ public class AnalitzarController implements Initializable {
         stage.close();
     }
 
-	public void GetPlantilla() {
+	public Boolean GetPlantilla() {
+		Boolean lreturn = false;
 		if (!this.plantillaFile.getText().isEmpty()) {
 			File f = new File(this.plantillaFile.getText());
 			if (f.exists()) {
@@ -286,6 +369,7 @@ public class AnalitzarController implements Initializable {
 			    	    while (it.hasNext()) {
 			    	    	this.Plantilla.add(new Pregunta(it.nextLine()));
 			    	    }
+			    	    lreturn = true;
 			    	} catch (Exception e) {
 			        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 			        } finally {
@@ -296,19 +380,19 @@ public class AnalitzarController implements Initializable {
 			    }
 			} else ShowAlert(C_PLANTILLA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
 		} else ShowAlert(C_SELECCIONAR_PLANTILLA,C_ERROR,AlertType.ERROR);
+		return lreturn;
 	}
 	
-	public void CheckPECs() {
+	public Boolean CheckPECs() {
+		Boolean lreturn = false;
 		if (this.CheckDir()) {
 	        Boolean lproblems = false;
-	        File folder = new File(this.pecsDir.getText());		// folder for problem files
+	        File folder = new File(this.pecsDir.getText());						// PECs folder
 	        File problems = new File(this.pecsDir.getText(),C_PROBLEMES);		// folder for problem files
 	    	try {
 		        for (File f : folder.listFiles()) {
 					// loop for not hidden files
-			        if (f.isFile() && !f.isHidden() && !f.getName().equalsIgnoreCase(C_DADES_PECS)
-			        	&& !f.getName().equalsIgnoreCase(C_COMENTARIS_TXT)
-			        	&& !f.getName().equalsIgnoreCase(C_ANALISI)) {
+			        if (f.isFile() && !f.isHidden()) {
 			        	// PDF?
 			        	String ext = FilenameUtils.getExtension(f.getName());
 			        	if (ext.equalsIgnoreCase("pdf")) {
@@ -327,13 +411,14 @@ public class AnalitzarController implements Initializable {
 			        	}
 			        }
 			    }
+		        lreturn = true;
 				
 				if (lproblems) ShowAlert(C_HI_HA_PROBLEMES,C_ATENCIO,AlertType.WARNING);
 	    	} catch (Exception e) {
 		    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 		    }
-
 		}
+		return lreturn;
 	}
 	
     public void GetPECs() {
@@ -383,11 +468,11 @@ public class AnalitzarController implements Initializable {
 	            }
 	        }
 	        // write file with PEC data	        
-	        Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_PECS), lines, Charset.forName("UTF-8"));
+	        Files.write(Paths.get(this.savedir + File.separator + C_DADES_PECS), lines, Charset.forName("UTF-8"));
 
 	        if (lcomments) {
-	        	// write file with PEC data	        
-		        Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_COMENTARIS_TXT), comments, Charset.forName("UTF-8"));
+	        	// write file with comments	        
+		        Files.write(Paths.get(this.savedir + File.separator + C_COMENTARIS_TXT), comments, Charset.forName("UTF-8"));
 		        
 		        // show expandable dialog with comments
 		        Alert alert = new Alert(AlertType.INFORMATION);
@@ -454,30 +539,32 @@ public class AnalitzarController implements Initializable {
     public void Graba(Boolean alert) {
 		NumberFormat formatter = new DecimalFormat("##0.000");
     	if (this.CheckDir()) {
-            List<String> lines = new ArrayList<>();
-            for (Solucio s : this.sol) {
-            	String c = s.pregunta + ";" + (s.anulada ? "1" : "0") + ";";
-            	if (!s.esLliure) {
-	            	Boolean lfirst = true;
-	            	for (Opcio o : s.opcions) {
-	            		c = c + (lfirst ? "" : ",") + o.value + "\t" + formatter.format(o.pct).replace(",", ".");
-	            		c = c + "\t" + (o.correcte ? "1" : "0") + "\t" + (o.solucio ? "1" : "0");
-	            		lfirst = false;
+    		if (this.sol!=null) {
+	            List<String> lines = new ArrayList<>();
+	            for (Solucio s : this.sol) {
+	            	String c = s.pregunta + ";" + (s.anulada ? "1" : "0") + ";";
+	            	if (!s.esLliure) {
+		            	Boolean lfirst = true;
+		            	for (Opcio o : s.opcions) {
+		            		c = c + (lfirst ? "" : ",") + o.value + "\t" + formatter.format(o.pct).replace(",", ".");
+		            		c = c + "\t" + (o.correcte ? "1" : "0") + "\t" + (o.solucio ? "1" : "0");
+		            		lfirst = false;
+		            	}
+	            	} else {
+	            		c = c + "0";
 	            	}
-            	} else {
-            		c = c + "0";
-            	}
-            	
-            	lines.add(c);
-            }
-            
-            // write file
-            try {
-            	Files.write(Paths.get(this.pecsDir.getText() + File.separator + C_ANALISI), lines, Charset.forName("UTF-8"));
-            	if (alert) ShowAlert(C_GRABACIO_COMPLETADA,"",AlertType.INFORMATION);
-            } catch (Exception e) {
-            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-            }
+	            	
+	            	lines.add(c);
+	            }
+	            
+	            // write file
+	            try {
+	            	Files.write(Paths.get(this.savedir + File.separator + C_ANALISI), lines, Charset.forName("UTF-8"));
+	            	if (alert) ShowAlert(C_GRABACIO_COMPLETADA,"",AlertType.INFORMATION);
+	            } catch (Exception e) {
+	            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+	            }
+    		}
     	}
     }
     
@@ -509,7 +596,7 @@ public class AnalitzarController implements Initializable {
 	    	    }
 	    	    
 	    	    this.SetPreguntes();
-	    	    this.SetOpcions(this.sol.get(0).pregunta);
+	    	    //this.SetOpcions(this.sol.get(0).pregunta);
 	    	} catch (Exception e) {
 	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	        } finally {
@@ -519,8 +606,25 @@ public class AnalitzarController implements Initializable {
 	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	    }
     }
-
     
+    public void CarregaPECs(File f) {
+    	this.PECs = new ArrayList<PEC>();
+		try {
+			LineIterator it = FileUtils.lineIterator(f, "UTF-8");
+	    	try {
+	    	    while (it.hasNext()) {
+                    this.PECs.add(new PEC(this.Plantilla, it.nextLine()));		// add PEC to arraylist
+	    	    }
+	    	} catch (Exception e) {
+	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+	        } finally {
+	    	    it.close();
+	    	}
+	    } catch (Exception e) {
+	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+	    }
+    }
+/*    
     public void SetOpcions(String p) {
     	this.resps.clear();
     	// get the chosen solucio
@@ -535,118 +639,60 @@ public class AnalitzarController implements Initializable {
     		}
     	}
     }
-    
+*/    
     public void SetPreguntes() {
-        for (Solucio s: this.sol) {
+/*        for (Solucio s: this.sol) {
         	PreguntaSol p = new PreguntaSol(s);
              this.pregs.add(p);
+        }*/
+        
+        
+        for (Solucio s: this.sol) {
+        	if (!s.esLliure) {
+	        	Boolean subitem = false;
+				for (Opcio o: s.opcions) {
+					this.pr.add(new PreguntaResposta(s, o, subitem));
+					subitem = true;
+				}
+        	}
         }
         
-        this.preguntas.requestFocus();
+/*        this.preguntas.requestFocus();
         this.preguntas.getSelectionModel().select(0);
         this.preguntas.getFocusModel().focus(0);
+
+        for (PreguntaResposta p: this.pr) {
+        	if (!p.subresposta) System.out.println(p.getNom());
+        	else System.out.print("   ");
+        	System.out.print(p.getValor() + " ");
+        	System.out.print(p.getPCT() + " ");
+        	System.out.print(p.getCorrecte() + " ");
+        	System.out.println(p.getSolucio() + " ");
+        }*/
     }
 
-
-/*
-    @FXML
-    public void mnuExportAnalitza(ActionEvent event) {
-    	if (this.CheckDir()) {
-	    	if (this.Descomprimir()) {
-	    		this.Analitzar();
-	    	}
+    public Boolean CheckDir() {
+    	Boolean lreturn = false;
+    	if (this.pecsDir.getText().isEmpty()) {
+    		ShowAlert(C_INDICAR_CARPETA,C_ERROR,AlertType.ERROR);
+    	} else {
+    		File folder = new File(this.pecsDir.getText());
+    		lreturn = folder.exists(); 
+    		if (!lreturn) ShowAlert(C_CARPETA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
     	}
+    	return lreturn;
     }
-    
-    @FXML
-    public void mnuGraba(ActionEvent event) {
-    	if (this.CheckDir()) {
-    		this.Graba();
-    	}
-    }
-    
-    @FXML
-    public void mnuNotes(ActionEvent event) {
-    	if (this.CheckDir()) {
-    		ArrayList<Pregunta> Solucio = this.GetSolucio();
-    		if (Solucio.size()>0) {
-    			ArrayList<PEC> PECs = this.GetPECs(Solucio);
-    			if (PECs.size()>0) {
-	            	// load solucions to each plantilla and sum of weights
-    				float wsum = 0;
-	            	for (Pregunta p : Solucio) {
-	            		wsum = wsum + p.w;
-	            		for (Solucio s : this.sol) {
-	            			if (s.pregunta.equals(p.nom)) {
-	            				p.SetSolucio(s);
-	            				break;
-	            			}
-	            		}
-	            	}
-	            	
-	            	// compute PEC nota 	            	
-	            	for (PEC p : PECs) {
-	            		p.CalculaNota(wsum);
-	            	}
-	            	
-	            	
-            		// get curs, any, numpec if exists
-	            	String anc = "";
-	            	Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter(C_DADES_ANC), null);
-	                if (!files.isEmpty()) {
-		            	try {
-		            		// get curs, any, 
-		            		LineIterator it = FileUtils.lineIterator(files.iterator().next(), "UTF-8");
-		                	try {
-		                	    while (it.hasNext()) {
-		                	    	anc = it.nextLine();
-		                	    }
-		                	} catch (Exception e) {
-		                    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-		                    } finally {
-		                	    it.close();
-		                	}
-		            	} catch (Exception e) {
-		                	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-		                }
-	                }
-	            	
-	            	// show computed notas
-	                try {
-	                    FXMLLoader fxml = new FXMLLoader(getClass().getResource("Notes.fxml"));
-	                    Parent r = (Parent) fxml.load();
-	                    Stage stage = new Stage();
-	                    stage.initModality(Modality.APPLICATION_MODAL);
-	                    stage.setScene(new Scene(r));
-	                    stage.setTitle("Notes");
-	                    NotesController notes = fxml.<NotesController>getController();
-	                    notes.SetData(PECs,Solucio,anc,this.dir.getText());
-	                    stage.showAndWait();
-	                } catch(Exception e) {
-	                    System.out.println(e.getMessage());
-	                }
 
-    			}
-    		}
-    	}
-    	
+    public void ShowAlert(String message, String title, AlertType type) {
+    	Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
-    
-    public ArrayList<Pregunta> GetSolucio() {
-    	// SOLUCIÓ: arxiu sol.txt
-        ArrayList<Pregunta> Solucio = new ArrayList<Pregunta>();
-        
-    	File folder = new File(dir.getText());
-        Collection<File> files = FileUtils.listFiles(folder, new WildcardFileFilter(C_SOL), null);
-        if (files.isEmpty()) ShowAlert(C_NO_ES_TROBA_SOL,C_ERROR,AlertType.ERROR);
-        else Solucio = GetPlantilla(files.iterator().next());
 
-        return Solucio;
-    }
-    
-    public boolean Descomprimir() {
-		Boolean lreturn = false;
-		
+/*	YA NO SE DESCOMPRIME: DEJO EL CÓDIGO COMO REFERENCIA    
+    public void Descomprimir() {
     	if (this.CheckDir()) {
 			// zip file
 	        File directory = new File(dir.getText());
@@ -689,192 +735,13 @@ public class AnalitzarController implements Initializable {
 	                zis.closeEntry();
 	                zis.close();
 	                
-	        		// check unzipped files and move to problemes if necessary
-	                Boolean lproblems = false;
-	                File problems = new File(dir.getText(),C_PROBLEMES);		// folder for problem files
-	            	if (problems.exists()) FileUtils.deleteDirectory(problems); 
-	                for (File f : folder.listFiles()) {
-	        			// loop for not hidden files
-	        	        if (f.isFile() && !f.isHidden()) {
-	        	        	// PDF?
-	        	        	String ext = FilenameUtils.getExtension(f.getName());
-	        	        	if (ext.equalsIgnoreCase("pdf")) {
-	        	                PdfReader reader = new PdfReader(f.getAbsolutePath());
-	        	                AcroFields form = reader.getAcroFields();
-	        	                int nsize = form.getFields().size();
-	        	                reader.close();
-	        	                // fields?
-	        	                if (!(nsize>0)) {
-	        	                	FileUtils.moveFileToDirectory(f, problems, true);
-	        	                	lproblems = true;
-	        	                }
-	        	        	} else {
-	        	        		FileUtils.moveFileToDirectory(f, problems, true);
-	        	        		lproblems = true;
-	        	        	}
-	        	        }
-	        	    }
-	        		
-	        		if (lproblems) ShowAlert(C_HI_HA_PROBLEMES,C_ATENCIO,AlertType.WARNING);
-	        		else ShowAlert(C_FINAL,"",AlertType.INFORMATION);
-	        		
-	        		lreturn = true;
+	        		ShowAlert(C_FINAL,"",AlertType.INFORMATION);
 	            } catch (Exception e) {
 	            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	            }
 	        }
 		}
-    	
-    	return lreturn;
 	}
-    
-    public void CarregaAnalisi(File f) {
-    	this.sol = new ArrayList<Solucio>();
-		try {
-			LineIterator it = FileUtils.lineIterator(f, "UTF-8");
-	    	try {
-	    	    while (it.hasNext()) {
-	    	    	String line = it.nextLine();
-	    	    	String[] fields = line.split(";");
-	    	    	Solucio s = new Solucio(null,0);
-	    	    	s.pregunta = fields[0];
-	    	    	s.anulada = (fields[1].equals("1"));
-	    	    	s.esLliure = (fields[2].equals("0"));
-	    	    	if (!s.esLliure) {
-		    	    	String[] opcions = fields[2].split(",",-1);
-		    	    	for (String op: opcions) {
-		    	    		String [] v = op.split("\t",-1);
-		    	    		Opcio o = new Opcio("",0,0);
-		    	    		o.value = v[0];
-		    	    		o.pct = Double.parseDouble(v[1]);
-		    	    		o.correcte = (v[2].equals("1"));
-		    	    		o.solucio = (v[3].equals("1"));
-		    	    		s.opcions.add(o);
-		    	    	}
-	    	    	}
-	    	    	this.sol.add(s);
-	    	    }
-	    	    
-	    	    this.SetPreguntes();
-	    	    this.SetOpcions(this.sol.get(0).pregunta);
-	    	} catch (Exception e) {
-	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-	        } finally {
-	    	    it.close();
-	    	}
-	    } catch (Exception e) {
-	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-	    }
-    }
-
-	public ArrayList<Pregunta> GetPlantilla(File f) {
-		ArrayList<Pregunta> Plantilla = new ArrayList<Pregunta>();
-		try {
-			LineIterator it = FileUtils.lineIterator(f, "UTF-8");
-	    	try {
-	    		Boolean lfirst = true;
-	    	    while (it.hasNext()) {
-	    	    	String line = it.nextLine();
-	    	    	if (!lfirst) Plantilla.add(new Pregunta(line));
-	    	    	else lfirst = false;
-	    	    }
-	    	} catch (Exception e) {
-	        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-	        } finally {
-	    	    it.close();
-	    	}
-	    } catch (Exception e) {
-	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-	    }
-		return Plantilla;
-	}
-	
-    public void GetDadesPECs(File folder, File pecs, ArrayList<Pregunta> Plantilla) {
-    	// loop through the PDF files of the PDFs folder
-    	Collection<File> pdfs = FileUtils.listFiles(pecs, new WildcardFileFilter(C_PDF), null);
-        List<String> lines = new ArrayList<>();
-        Boolean lfirst = true;
-        for (File f : pdfs) {
-            if (f.isFile()) {
-                String n = f.getName();
-                String dni = n.substring(n.lastIndexOf("_")+1);
-                dni = dni.substring(0,dni.indexOf("."));
-                
-                if (lfirst) {
-                	lfirst = false;
-                	// get curso and pec name data
-                	String curso = n.substring(n.indexOf("_")+1,n.lastIndexOf("_"));
-                	String pec = n.substring(0,n.indexOf("_")).replace("PEC", "");
-                	if (pec.isEmpty()) pec = "1";
-                	int year = LocalDateTime.now().getYear();
-                	int month = LocalDateTime.now().getMonthValue();
-               		String anc = (month>=10 ? String.valueOf(year)+"-"+String.valueOf(year+1-2000) : 
-               			String.valueOf(year-1)+"-"+String.valueOf(year-2000));
-                    // write anc file
-                	List<String> data = new ArrayList<>();
-                	data.add(curso + ";" + pec + ";" + anc);
-                    try {
-                    	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_ANC), data, Charset.forName("UTF-8"));
-                    } catch (Exception e) {
-                    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-                    }
-                }
-                
-                // open PEC
-                try {
-                    PdfReader reader = new PdfReader(f.getAbsolutePath());
-                    AcroFields form = reader.getAcroFields();
-                    if (form.getFields().size()>0) {
-                        // header with id data
-                        String c = form.getField("APE1") + "\t" + form.getField("APE2") + "\t" + 
-                                form.getField("NOMBRE") + "\t" + dni;
-                        try {
-                        	String h = form.getField("HONOR");
-                        	c = c + "\t" + (h.equalsIgnoreCase("Yes") ? "1" : "0");
-                        } catch (Exception e) {
-                        	// do nothing: the HONOR field is not present (PEC presencial)
-                        }
-
-                        // loop to get field data
-                        for (Pregunta p : Plantilla) {
-                            c = c + ";" + form.getField(p.nom).replace(",", ".");
-                        }
-                        lines.add(c);
-                    }
-                    reader.close();
-                } catch (Exception e) {
-                	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-                }
-            }
-        }
-        
-        // write file
-        try {
-        	Files.write(Paths.get(folder.getAbsolutePath() + File.separator + C_DADES_PECS), lines, Charset.forName("UTF-8"));
-        } catch (Exception e) {
-        	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
-        }
-    }
-    
-    
 */    
-    public Boolean CheckDir() {
-    	Boolean lreturn = false;
-    	if (this.pecsDir.getText().isEmpty()) {
-    		ShowAlert(C_INDICAR_CARPETA,C_ERROR,AlertType.ERROR);
-    	} else {
-    		File folder = new File(this.pecsDir.getText());
-    		lreturn = folder.exists(); 
-    		if (!lreturn) ShowAlert(C_CARPETA_NO_EXISTEIX,C_ERROR,AlertType.ERROR);
-    	}
-    	return lreturn;
-    }
 
-    public void ShowAlert(String message, String title, AlertType type) {
-    	Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }    
 }
