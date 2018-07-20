@@ -35,6 +35,7 @@ public class Resposta {
 		        			found = r.equals(c);
 	        			} catch (Exception e) {
 	        				// do nothing: keep trying
+	        				found = false;
 	        			}
 	        		}
 	        		

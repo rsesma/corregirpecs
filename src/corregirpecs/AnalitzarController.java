@@ -63,7 +63,8 @@ public class AnalitzarController implements Initializable {
     private final String C_DEFDIR = System.getProperty("user.home");
     
     private final Boolean L_TEST = true;
-    private final String C_DIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    //private final String C_DIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_DIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
     private final String C_PLANTILLA = "plantilla.txt";
     private final String C_PECS = "PECS_DE0";
     
@@ -305,6 +306,18 @@ public class AnalitzarController implements Initializable {
 	    	// compute PEC nota  	
 	    	for (PEC p : PECs) {
 	    		p.CalculaNota(wsum);
+	    		
+/*	    		List<String> c = new ArrayList<>();
+	    		if (p.dni.equals("38870682S")) {
+	    			for (Resposta r : p.resp) {
+	    				c.add(r.pregunta.nom + "," + r.resposta + "," + r.pregunta.getSolucions() + "," + String.valueOf(r.pregunta.w) + "," + String.valueOf(r.punt)); 
+	    			}
+		            try {
+		            	Files.write(Paths.get(this.savedir + File.separator + "temp.txt"), c, Charset.forName("UTF-8"));
+		            } catch (Exception e) {
+		            	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
+		            }
+	    		}*/
 	    	}
 		            	
 			// get curs, any, numpec from the first available PEC
