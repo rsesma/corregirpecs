@@ -16,16 +16,16 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="647.0" prefWidth="506.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.AnalitzarController">
+<AnchorPane prefHeight="688.0" prefWidth="506.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.AnalitzarController">
    <children>
-      <Label layoutX="20.0" layoutY="10.0" text="0. Indicar arxiu TXT amb la plantilla de la solució de la PEC">
+      <Label layoutX="20.0" layoutY="10.0" text="1. Indicar arxiu TXT amb la plantilla de la solució de la PEC">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
       <TextField fx:id="plantillaFile" editable="false" layoutX="20.0" layoutY="32.0" prefHeight="27.0" prefWidth="432.0" />
       <Button layoutX="460.0" layoutY="32.0" mnemonicParsing="false" onAction="#getArxiuPlantilla" prefHeight="27.0" prefWidth="11.0" text="..." />
-      <Label layoutX="20.0" layoutY="70.0" text="1. Indicar carpeta amb les PECs descomprimides">
+      <Label layoutX="20.0" layoutY="70.0" text="2. Indicar carpeta amb les PECs descomprimides">
          <font>
             <Font size="14.0" />
          </font>
@@ -37,35 +37,37 @@
             <Font size="13.0" />
          </font>
       </Button>
-      <Label layoutX="20.0" layoutY="149.0" text="2. Analitzar">
+      <Label layoutX="20.0" layoutY="149.0" text="3. Analitzar">
          <font>
             <Font size="14.0" />
          </font>
       </Label>
-      <TableView fx:id="pregresp" layoutX="20.0" layoutY="174.0" prefHeight="417.0" prefWidth="464.0" stylesheets="@Corregir.css">
+      <TableView fx:id="pregresp" layoutX="20.0" layoutY="174.0" prefHeight="417.0" prefWidth="471.0" stylesheets="@Corregir.css">
         <columns>
-          <TableColumn fx:id="anulCol" prefWidth="69.0" sortable="false" text="Anul·lar" />
-          <TableColumn fx:id="nomCol" editable="false" prefWidth="89.0" sortable="false" styleClass="nomPregunta" text="Pregunta" />
-          <TableColumn fx:id="respCol" editable="false" prefWidth="96.0" sortable="false" text="Resposta" />
-          <TableColumn fx:id="pctCol" editable="false" prefWidth="62.0" sortable="false" text="\%" />
-            <TableColumn fx:id="corrCol" prefWidth="59.0" sortable="false" text="Correcte" />
-            <TableColumn fx:id="solCol" prefWidth="56.0" sortable="false" text="Solució" />
+          <TableColumn fx:id="anulCol" prefWidth="64.0" sortable="false" text="Anul·lar" />
+          <TableColumn fx:id="nomCol" editable="false" prefWidth="94.0" sortable="false" styleClass="nomPregunta" text="Pregunta" />
+          <TableColumn fx:id="respCol" editable="false" prefWidth="89.0" sortable="false" text="Resposta" />
+          <TableColumn fx:id="pctCol" editable="false" prefWidth="64.0" sortable="false" text="\%" />
+            <TableColumn fx:id="corrCol" prefWidth="67.0" sortable="false" text="Correcte" />
+            <TableColumn fx:id="solCol" prefWidth="53.0" sortable="false" text="Solució" />
         </columns>
       </TableView>
-      <Button cancelButton="true" layoutX="20.0" layoutY="604.0" mnemonicParsing="false" onAction="#pbTancar" text="Tancar">
+      <Button cancelButton="true" layoutX="17.0" layoutY="647.0" mnemonicParsing="false" onAction="#pbTancar" text="Tancar">
          <font>
             <Font size="13.0" />
          </font>
       </Button>
-      <Button cancelButton="true" layoutX="384.0" layoutY="604.0" mnemonicParsing="false" onAction="#pbNotes" text="Calcular Notes">
+      <Button layoutX="381.0" layoutY="647.0" mnemonicParsing="false" onAction="#pbNotes" text="Calcular Notes">
          <font>
             <Font size="13.0" />
          </font>
       </Button>
-      <Button cancelButton="true" layoutX="275.0" layoutY="604.0" mnemonicParsing="false" onAction="#pbGrabar" text="Grabar anàlisi">
+      <Button layoutX="272.0" layoutY="647.0" mnemonicParsing="false" onAction="#pbGrabar" text="Grabar anàlisi">
          <font>
             <Font size="13.0" />
          </font>
       </Button>
+      <Label layoutX="20.0" layoutY="600.0" text="Correcte: resposta vàlida (pot haver més d'una per pregunta)" />
+      <Label layoutX="21.0" layoutY="617.0" text="Solució: solució 'oficial' (només una, ha de ser una resposta correcta)" />
    </children>
 </AnchorPane>

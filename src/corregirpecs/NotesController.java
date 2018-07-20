@@ -139,7 +139,7 @@ public class NotesController implements Initializable {
 	        	String c = C_DELIM + p.dni + C_DELIM + C_SEP + 
 	        			C_DELIM + this.curs.getText() + C_DELIM + C_SEP +
 	        			C_DELIM + this.any.getText().substring(2, 4) + C_DELIM + C_SEP +
-	        			"1" + C_SEP +
+	        			C_DELIM + "1" + C_DELIM + C_SEP +
 	        			this.pec.getText() + C_SEP +
 	        			formatter.format(p.nota).replace(",", ".");
                 

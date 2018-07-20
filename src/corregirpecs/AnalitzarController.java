@@ -23,12 +23,10 @@ import com.itextpdf.text.pdf.PdfReader;
 
 import corregirpecs.model.Item;
 import corregirpecs.model.Opcio;
-import corregirpecs.model.OpcioSol;
 import corregirpecs.model.PEC;
 import corregirpecs.model.Pregunta;
 import corregirpecs.model.Pregunta.Tipo;
 import corregirpecs.model.PreguntaResposta;
-import corregirpecs.model.PreguntaSol;
 import corregirpecs.model.Resposta;
 import corregirpecs.model.Solucio;
 import corregirpecs.model.Stat;
@@ -46,7 +44,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -64,11 +61,12 @@ import javafx.util.Callback;
 public class AnalitzarController implements Initializable {
     
     private final String C_DEFDIR = System.getProperty("user.home");
-    //private final String C_DEFDIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "/home/drslump/Escritorio/CorregirPECs/2017-18_PEC4_DE0";
-    //private final String C_DEFDIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
-    private final Boolean L_TEST = false ;
-
+    
+    private final Boolean L_TEST = true;
+    private final String C_DIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
+    private final String C_PLANTILLA = "plantilla.txt";
+    private final String C_PECS = "PECS_DE0";
+    
 	
     @FXML
     private TextField plantillaFile;
@@ -135,20 +133,16 @@ public class AnalitzarController implements Initializable {
             @Override
             public ObservableValue<Boolean> call(TableColumn.CellDataFeatures<PreguntaResposta, Boolean> param) {
                 PreguntaResposta p = param.getValue();
-                if (!p.subresposta) {
-	                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getAnulada());
-	                // when column change
-	                booleanProp.addListener(new ChangeListener<Boolean>() {
-	                    @Override
-	                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
-	                            Boolean newValue) { 
-	                        p.setAnulada(newValue);
-	                     }
-	                });
-	                return booleanProp;
-                } else {
-                	return null;
-                }
+                SimpleBooleanProperty booleanProp = new SimpleBooleanProperty(p.getAnulada());
+                // when column change
+                booleanProp.addListener(new ChangeListener<Boolean>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue,
+                            Boolean newValue) { 
+                        p.setAnulada(newValue);
+                     }
+                });
+                return booleanProp;
             }
         });
         this.anulCol.setCellFactory(column -> {
@@ -157,7 +151,6 @@ public class AnalitzarController implements Initializable {
 				public void updateItem(Boolean item, boolean empty) {
                     super.updateItem(item, empty);
                     setAlignment(Pos.CENTER);
-        			if (this.getItem() == null) setVisible(false);
                 }
         	};
         });
@@ -218,9 +211,12 @@ public class AnalitzarController implements Initializable {
 
         // TEST
         if (L_TEST) {
-//	        this.dir.setText(C_DEFDIR);
-//	        Collection<File> files = FileUtils.listFiles(new File(dir.getText()), new WildcardFileFilter("analisi.txt"), null);
-//	        this.CarregaAnalisi(files.iterator().next());
+	        this.plantillaFile.setText(C_DIR + File.separator + C_PLANTILLA);
+	        this.GetPlantilla();
+	        this.pecsDir.setText(C_DIR + File.separator + C_PECS);
+	        this.savedir = C_DIR;
+	        Collection<File> files = FileUtils.listFiles(new File(this.savedir), new WildcardFileFilter("analisi.txt"), null);
+	        this.CarregaAnalisi(files.iterator().next());
         }
     }
 
@@ -624,51 +620,21 @@ public class AnalitzarController implements Initializable {
 	    	ShowAlert(e.getMessage(),C_ERROR,AlertType.ERROR);
 	    }
     }
-/*    
-    public void SetOpcions(String p) {
-    	this.resps.clear();
-    	// get the chosen solucio
-    	for (Solucio s: this.sol) {
-    		if (s.pregunta.equals(p)) {
-    			if (!s.esLliure ) {
-	    			// load opcions
-	    			for (Opcio o: s.opcions) {
-	    				this.resps.add(new OpcioSol(o, this.respostes));
-	    			}
-    			}
-    		}
-    	}
-    }
-*/    
+
     public void SetPreguntes() {
-/*        for (Solucio s: this.sol) {
-        	PreguntaSol p = new PreguntaSol(s);
-             this.pregs.add(p);
-        }*/
-        
-        
         for (Solucio s: this.sol) {
         	if (!s.esLliure) {
 	        	Boolean subitem = false;
 				for (Opcio o: s.opcions) {
-					this.pr.add(new PreguntaResposta(s, o, subitem));
+					this.pr.add(new PreguntaResposta(s, o, subitem, this.pregresp));
 					subitem = true;
 				}
         	}
         }
         
-/*        this.preguntas.requestFocus();
-        this.preguntas.getSelectionModel().select(0);
-        this.preguntas.getFocusModel().focus(0);
-
-        for (PreguntaResposta p: this.pr) {
-        	if (!p.subresposta) System.out.println(p.getNom());
-        	else System.out.print("   ");
-        	System.out.print(p.getValor() + " ");
-        	System.out.print(p.getPCT() + " ");
-        	System.out.print(p.getCorrecte() + " ");
-        	System.out.println(p.getSolucio() + " ");
-        }*/
+        this.pregresp.requestFocus();
+        this.pregresp.getSelectionModel().select(0);
+        this.pregresp.getFocusModel().focus(0);
     }
 
     public Boolean CheckDir() {

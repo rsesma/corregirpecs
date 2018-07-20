@@ -3,6 +3,10 @@ package corregirpecs.model;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 
+import javafx.scene.control.Alert;
+import javafx.scene.control.TableView;
+import javafx.scene.control.Alert.AlertType;
+
 
 public class PreguntaResposta {
 	public Solucio sol = null;
@@ -11,13 +15,21 @@ public class PreguntaResposta {
 	
 	public NumberFormat formatter;
 	
+	public TableView<PreguntaResposta> pregresp;
 	
-    public PreguntaResposta(Solucio s, Opcio o, Boolean sub) {
+	private final String C_ATENCIO = "Atenció";
+	private final String C_CORRECTA_SOLUCIO = "La resposta solució ha de ser correcta";
+	private final String C_UNA_SOLUCIO = "Hi ha d'haver una resposta solució";
+	
+	
+    public PreguntaResposta(Solucio s, Opcio o, Boolean sub, TableView<PreguntaResposta> p) {
 		this.sol = s;
         this.opc = o;
         this.subresposta = sub;
         
         this.formatter = new DecimalFormat("##0.000");     
+        
+        this.pregresp = p;
     }
     
     public String getNom() {
@@ -25,7 +37,7 @@ public class PreguntaResposta {
     }
 
     public Boolean getAnulada() {
-        return this.sol.anulada;
+        return (this.subresposta ? false : this.sol.anulada);
     }
     
     public String getValor() {
@@ -46,52 +58,39 @@ public class PreguntaResposta {
 
     public void setAnulada(Boolean l) {
     	this.sol.anulada = l;
+    	this.pregresp.refresh();
     }
 
     public void setCorrecte(Boolean l) {
-    	this.opc.correcte = l;
-/*    	// check for at least one correcte & solucio option
-		Boolean last = true;
-		Boolean solucio = false;
-    	for (OpcioSol o : this.respostes.getItems()) {
-    		if (!o.valor.equals(this.valor)) {
-				if (o.correcte) last = false;
-			} else {
-				if (o.solucio) solucio = true;
-			}
-    	}
-    	
-    	if (last && !l) {
-    		ShowAlert(C_UNA_CORRECTA,C_ATENCIO,AlertType.WARNING);
-    		this.respostes.refresh();
-    	} else if (solucio && !l) {
-    		ShowAlert(C_SOLUCIO_CORRECTA,C_ATENCIO,AlertType.WARNING);
-    		this.respostes.refresh();
+    	if (this.opc.solucio && !l) {
+    		// la resposta correcta ha de ser solució
+    		ShowAlert(C_CORRECTA_SOLUCIO,C_ATENCIO,AlertType.WARNING);
+    		this.pregresp.refresh();
     	} else {
-    		this.op.correcte = l;
-    		this.correcte = l;
-    	}*/
+    		this.opc.correcte = l;
+    	}
     }
-    
 
     public void setSolucio(Boolean l) {
-    	this.opc.correcte = l;
-/*    	if (this.solucio && !l) {
+    	if (this.opc.solucio && !l) {
+    		// hi ha d'haver al menys una solució
     		ShowAlert(C_UNA_SOLUCIO,C_ATENCIO,AlertType.WARNING);
-    		this.respostes.refresh();
     	} else {
-        	for (OpcioSol o : this.respostes.getItems()) {
-        		if (o.solucio) {
-    				o.solucio = false;
-    				o.op.solucio = false;
-    			}
+    		// toggle: només hi ha una resposta solució 
+        	for (Opcio o : this.sol.opcions) {
+        		if (o.solucio) o.solucio = false;
         	}
-    		this.op.solucio = l;
-    		this.solucio = l;
-    		
-    		this.correcte = true;
-    		this.op.correcte = true;
-			this.respostes.refresh();
-    	}*/
+    		this.opc.solucio = l;
+    		this.opc.correcte = l;    		
+    	}
+		this.pregresp.refresh();
+    }
+    
+    public void ShowAlert(String message, String title, AlertType type) {
+    	Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
