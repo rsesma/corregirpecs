@@ -50,6 +50,8 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.stage.DirectoryChooser;
@@ -62,7 +64,7 @@ public class AnalitzarController implements Initializable {
     
     private final String C_DEFDIR = System.getProperty("user.home");
     
-    private final Boolean L_TEST = true;
+    private final Boolean L_TEST = false;
     //private final String C_DIR = "/Users/r/Desktop/CorregirPECs/2017-18_PEC4_DE0";
     private final String C_DIR = "C:\\Users\\tempo\\Desktop\\CorregirPECs\\2017-18_PEC4_DE0";
     private final String C_PLANTILLA = "plantilla.txt";
@@ -73,6 +75,8 @@ public class AnalitzarController implements Initializable {
     private TextField plantillaFile;
     @FXML
     private TextField pecsDir;
+    @FXML
+    private TextField buscar;
 	@FXML
     private TableView<PreguntaResposta> pregresp;
     @FXML
@@ -266,6 +270,27 @@ public class AnalitzarController implements Initializable {
     }
 
     @FXML
+    private void pbBuscar(ActionEvent event) {
+    	if (!this.buscar.getText().isEmpty()) {
+    		String search = this.buscar.getText();
+    		for (PreguntaResposta p : this.pr) {
+    			String name = p.getNom();
+    			if (name.toLowerCase().contains(search.toLowerCase())) {
+    		        this.pregresp.requestFocus();
+    		        this.pregresp.getSelectionModel().select(p);
+    		        this.pregresp.scrollTo(p);
+    		        break;
+    			}
+    		}
+    	}
+    }
+    
+    @FXML
+    private void buscarIntro(KeyEvent event) {
+    	if (event.getCode().equals(KeyCode.ENTER)) this.pbBuscar(null);
+    }
+    
+    @FXML
     private void pbGrabar(ActionEvent event) {
     	this.Graba(true);
     }
@@ -308,9 +333,10 @@ public class AnalitzarController implements Initializable {
 	    		p.CalculaNota(wsum);
 	    		
 /*	    		List<String> c = new ArrayList<>();
-	    		if (p.dni.equals("38870682S")) {
+	    		c.add("num,pregunta,resposta,solucio,valor,puntuacio");
+	    		if (p.dni.equals("5935191H")) {
 	    			for (Resposta r : p.resp) {
-	    				c.add(r.pregunta.nom + "," + r.resposta + "," + r.pregunta.getSolucions() + "," + String.valueOf(r.pregunta.w) + "," + String.valueOf(r.punt)); 
+	    				c.add(String.valueOf(r.pregunta.num)+ "," + r.pregunta.nom + "," + r.resposta + "," + r.pregunta.getSolucions() + "," + String.valueOf(r.pregunta.w) + "," + String.valueOf(r.punt)); 
 	    			}
 		            try {
 		            	Files.write(Paths.get(this.savedir + File.separator + "temp.txt"), c, Charset.forName("UTF-8"));

@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="688.0" prefWidth="506.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.AnalitzarController">
+<AnchorPane prefHeight="717.0" prefWidth="506.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="corregirpecs.AnalitzarController">
    <children>
       <Label layoutX="20.0" layoutY="10.0" text="1. Indicar arxiu TXT amb la plantilla de la solució de la PEC">
          <font>
@@ -52,22 +52,28 @@
             <TableColumn fx:id="solCol" prefWidth="53.0" sortable="false" text="Solució" />
         </columns>
       </TableView>
-      <Button cancelButton="true" layoutX="17.0" layoutY="647.0" mnemonicParsing="false" onAction="#pbTancar" text="Tancar">
+      <Label layoutX="23.0" layoutY="627.0" text="Correcte: resposta vàlida (s'admet més d'una reposta correcta per pregunta)" />
+      <Label layoutX="24.0" layoutY="644.0" text="Solució: solució 'oficial' (només una, que ha de ser una resposta correcta)" />
+      <Button cancelButton="true" layoutX="20.0" layoutY="674.0" mnemonicParsing="false" onAction="#pbTancar" text="Tancar">
          <font>
             <Font size="13.0" />
          </font>
       </Button>
-      <Button layoutX="381.0" layoutY="647.0" mnemonicParsing="false" onAction="#pbNotes" text="Calcular Notes">
+      <Button layoutX="384.0" layoutY="674.0" mnemonicParsing="false" onAction="#pbNotes" text="Calcular Notes">
          <font>
             <Font size="13.0" />
          </font>
       </Button>
-      <Button layoutX="272.0" layoutY="647.0" mnemonicParsing="false" onAction="#pbGrabar" text="Grabar anàlisi">
+      <Button layoutX="275.0" layoutY="674.0" mnemonicParsing="false" onAction="#pbGrabar" text="Grabar anàlisi">
          <font>
             <Font size="13.0" />
          </font>
       </Button>
-      <Label layoutX="20.0" layoutY="600.0" text="Correcte: resposta vàlida (pot haver més d'una per pregunta)" />
-      <Label layoutX="21.0" layoutY="617.0" text="Solució: solució 'oficial' (només una, ha de ser una resposta correcta)" />
+      <TextField fx:id="buscar" layoutX="20.0" layoutY="599.0" onKeyPressed="#buscarIntro" promptText="Buscar" />
+      <Button layoutX="173.0" layoutY="597.0" mnemonicParsing="false" onAction="#pbBuscar" text="Buscar">
+         <font>
+            <Font size="13.0" />
+         </font>
+      </Button>
    </children>
 </AnchorPane>
